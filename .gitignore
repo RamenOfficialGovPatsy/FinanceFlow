@@ -1,0 +1,30 @@
+# .NET/Visual Studio/Rider
+*.user
+*.suo
+*.sln.doc
+.vs/
+.idea/
+
+# Артефакты сборки
+bin/
+obj/
+Debug/
+Release/
+
+# NuGet
+packages/
+*.nupkg
+
+# Entity Framework Core
+*.efmigrationshistory
+
+# AvaloniaUI
+.avalonia/
+*.log
+
+# Файлы операционной системы
+.DS_Store
+Thumbs.db
+
+# Локальные файлы PostgreSQL (если используются)
+*.pgpass

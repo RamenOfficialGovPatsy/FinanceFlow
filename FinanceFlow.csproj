@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <!-- Общие настройки проекта -->
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        
+        <!-- Манифест для Windows (поддержка 4K) -->
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        
+        <!-- Иконка приложения (будет добавлена в Assets/Images) -->
+        <!--<ApplicationIcon>Assets/Images/app_icon.ico</ApplicationIcon>-->
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Зависимости Avalonia -->
+        <PackageReference Include="Avalonia.Desktop" Version="11.3.8" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.8" />
+
+        <!-- Зависимости Базы Данных (PostgreSQL) -->
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.0">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+
+        <!-- Зависимость для PDF-отчетов -->
+        <PackageReference Include="QuestPDF" Version="2025.7.4" />
+
+        <!-- 
+          Для разработки: Позволяет Avalonia показывать превью в IDE
+          Если используете Rider, этот пакет не нужен. 
+          Если Visual Studio, раскомментируйте его.
+        -->
+        <!-- <PackageReference Include="Avalonia.Diagnostics" Version="11.0.10" /> -->
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- 
+          КРИТИЧЕСКИ ВАЖНО: 
+          Встраиваем шрифты Manrope и другие ресурсы в приложение.
+        -->
+        <AvaloniaResource Include="Assets/Fonts/*" />
+        <AvaloniaResource Include="Assets/Images/*" />
+    </ItemGroup>
+</Project>

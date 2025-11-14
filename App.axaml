@@ -1,0 +1,30 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:FinanceFlow"
+             x:Class="FinanceFlow.App">
+
+    <Application.Styles>
+        <!-- 1. Подключаем базовую тему -->
+        <FluentTheme />
+        
+        <!-- 2. (Опционально) Здесь будут наши кастомные стили -->
+        <!-- <StyleInclude Source="avares://FinanceFlow/Styles/AppStyles.axaml" /> -->
+    </Application.Styles>
+
+    <Application.Resources>
+        <!-- 3. Определяем наш шрифт Manrope -->
+        <FontFamily x:Key="ManropeFont">avares://FinanceFlow/Assets/Fonts#Manrope</FontFamily>
+        
+        <!-- 4. Определяем нашу цветовую палитру (из док. 1) -->
+        <SolidColorBrush x:Key="AppBackground" Color="#1F2937" />
+        <SolidColorBrush x:Key="AppText" Color="#F9FAFB" />
+        <SolidColorBrush x:Key="AppPrimary" Color="#8B5CF6" />
+        <SolidColorBrush x:Key="AppAccent" Color="#6366F1" />
+        
+        <!-- Цвета для приоритетов (из док. 1) -->
+        <SolidColorBrush x:Key="PriorityHigh" Color="#EF4444" />
+        <SolidColorBrush x:Key="PriorityMedium" Color="#F59E0B" />
+        <SolidColorBrush x:Key="PriorityLow" Color="#10B981" />
+    </Application.Resources>
+    
+</Application>
