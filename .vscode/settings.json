@@ -1,0 +1,15 @@
+{
+  "sqltools.connections": [
+    {
+      "ssh": "Disabled",
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5432,
+      "driver": "PostgreSQL",
+      "name": "FinanceFlow",
+      "database": "financeflow_db",
+      "username": "financeflow_user",
+      "password": "Ff_Postgres_Mdk_2025"
+    }
+  ]
+}
