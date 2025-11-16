@@ -3,28 +3,87 @@
              xmlns:local="using:FinanceFlow"
              x:Class="FinanceFlow.App">
 
-    <Application.Styles>
-        <!-- 1. Подключаем базовую тему -->
-        <FluentTheme />
-        
-        <!-- 2. (Опционально) Здесь будут наши кастомные стили -->
-        <!-- <StyleInclude Source="avares://FinanceFlow/Styles/AppStyles.axaml" /> -->
-    </Application.Styles>
-
+    <!-- 
+      РЕСУРСЫ ПРИЛОЖЕНИЯ
+      Определяем все цвета и шрифты здесь.
+    -->
     <Application.Resources>
-        <!-- 3. Определяем наш шрифт Manrope -->
+        <!-- 1. ШРИФТ -->
         <FontFamily x:Key="ManropeFont">avares://FinanceFlow/Assets/Fonts#Manrope</FontFamily>
         
-        <!-- 4. Определяем нашу цветовую палитру (из док. 1) -->
+        <!-- 2. ЦВЕТОВАЯ ПАЛИТРА (из Style Guide) -->
+        
+        <!-- Основные -->
         <SolidColorBrush x:Key="AppBackground" Color="#1F2937" />
+        <SolidColorBrush x:Key="AppCardBackground" Color="#374151" />
         <SolidColorBrush x:Key="AppText" Color="#F9FAFB" />
+        <SolidColorBrush x:Key="AppTextSecondary" Color="#9CA3AF" />
+        
+        <!-- Акцентные -->
         <SolidColorBrush x:Key="AppPrimary" Color="#8B5CF6" />
         <SolidColorBrush x:Key="AppAccent" Color="#6366F1" />
         
-        <!-- Цвета для приоритетов (из док. 1) -->
+        <!-- Приоритеты -->
         <SolidColorBrush x:Key="PriorityHigh" Color="#EF4444" />
         <SolidColorBrush x:Key="PriorityMedium" Color="#F59E0B" />
         <SolidColorBrush x:Key="PriorityLow" Color="#10B981" />
     </Application.Resources>
     
+    <!-- 
+      ГЛОБАЛЬНЫЕ СТИЛИ ПРИЛОЖЕНИЯ
+      Применяем стили ко всем элементам управления.
+    -->
+    <Application.Styles>
+        <FluentTheme />
+
+        <!-- 1. Глобальный стиль: Окно -->
+        <Style Selector="Window">
+            <Setter Property="FontFamily" Value="{StaticResource ManropeFont}" />
+            <Setter Property="Background" Value="{StaticResource AppBackground}" />
+        </Style>
+
+        <!-- 2. Глобальный стиль: UserControl -->
+        <Style Selector="UserControl">
+            <Setter Property="FontFamily" Value="{StaticResource ManropeFont}" />
+            <Setter Property="Background" Value="{StaticResource AppBackground}" />
+        </Style>
+
+        <!-- 3. Глобальный стиль: TextBlock -->
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource AppText}" />
+        </Style>
+
+        <!-- 4. Глобальный стиль: ProgressBar (как в макете) -->
+        <Style Selector="ProgressBar">
+            <Setter Property="Height" Value="6"/>
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="Background" Value="{StaticResource AppCardBackground}"/> <!-- Фон полосы -->
+            <Setter Property="Foreground" Value="{StaticResource AppPrimary}"/> <!-- Цвет прогресса -->
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- 5. Стили Кнопок (с именами) -->
+        
+        <!-- Базовый стиль для всех кнопок -->
+        <Style Selector="Button">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="16,10" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        
+        <!-- Класс для Основной кнопки (фиолетовая) -->
+        <Style Selector="Button.btn-primary">
+            <Setter Property="Background" Value="{StaticResource AppPrimary}" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+
+        <!-- Класс для Второстепенной кнопки (серая) -->
+        <Style Selector="Button.btn-secondary">
+            <Setter Property="Background" Value="{StaticResource AppCardBackground}" />
+            <Setter Property="Foreground" Value="{StaticResource AppText}" />
+            <Setter Property="Padding" Value="12,8" />
+        </Style>
+        
+    </Application.Styles>
 </Application>

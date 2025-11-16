@@ -17,6 +17,9 @@
         <!-- Зависимости Avalonia -->
         <PackageReference Include="Avalonia.Desktop" Version="11.3.8" />
         <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.8" />
+        <PackageReference Include="HotAvalonia" Version="3.0.0" PrivateAssets="All" />
+        
+        <!-- Зависимости Базы Данных (PostgreSQL) -->
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -26,10 +29,9 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
           <PrivateAssets>all</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0" />
-
-        <!-- Зависимости Базы Данных (PostgreSQL) -->
 
         <!-- Зависимость для PDF-отчетов -->
         <PackageReference Include="QuestPDF" Version="2025.7.4" />
@@ -37,7 +39,7 @@
         <!-- 
           Для разработки: Позволяет Avalonia показывать превью в IDE
           Если используете Rider, этот пакет не нужен. 
-          Если Visual Studio, раскомментируйте его.
+          Если Visual Studio, раскомментируйте ее.
         -->
         <!-- <PackageReference Include="Avalonia.Diagnostics" Version="11.0.10" /> -->
     </ItemGroup>

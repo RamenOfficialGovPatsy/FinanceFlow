@@ -1,0 +1,223 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="FinanceFlow.Views.GoalsView"
+             
+             Design.Background="{StaticResource AppBackground}">
+
+    <UserControl.Resources />
+    <UserControl.Styles />
+
+    <Grid RowDefinitions="Auto, *">
+        
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="40,20,40,10">
+            
+            <Button Grid.Column="0" 
+                    Content="📊 Аналитика" 
+                    Classes="btn-secondary"/> <Button Grid.Column="2" 
+                    Content="＋ Новая цель" 
+                    Classes="btn-primary"/> </Grid>
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="20" Margin="40,10,40,40">
+                
+                <Border Background="{StaticResource AppCardBackground}" 
+                        CornerRadius="12"
+                        Padding="24">
+                    
+                    <Border.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="✏️ Редактировать цель"/>
+                            <MenuItem Header="💰 Добавить пополнение"/>
+                            <MenuItem Header="📈 История пополнений"/>
+                            <Separator/>
+                            <MenuItem Header="❌ Удалить цель"/>
+                        </ContextMenu>
+                    </Border.ContextMenu>
+
+                    <StackPanel Spacing="16">
+                        
+                        <StackPanel Orientation="Horizontal" Spacing="8" Opacity="0.7">
+                            <TextBlock Text="📱" FontSize="14"/>
+                            <TextBlock Text="ТЕХНИКА" 
+                                       FontSize="12" 
+                                       FontWeight="Bold" 
+                                       LetterSpacing="0.05"/>
+                        </StackPanel>
+                        
+                        <TextBlock Text="IPHONE 15 PRO" 
+                                   FontSize="20" 
+                                   FontWeight="Bold" /> <Grid ColumnDefinitions="*, Auto">
+                            <StackPanel Grid.Column="0" Spacing="10">
+                                <TextBlock FontSize="16" FontWeight="Medium">
+                                    <Run Text="45 000 ₽"/>
+                                    <Run Text="/" Foreground="{StaticResource AppTextSecondary}"/>
+                                    <Run Text="120 000 ₽" Foreground="{StaticResource AppTextSecondary}"/>
+                                </TextBlock>
+                                
+                                <ProgressBar Value="37" Minimum="0" Maximum="100"/>
+                            </StackPanel>
+
+                            <TextBlock Grid.Column="1" 
+                                       Text="37%" 
+                                       FontSize="16" 
+                                       FontWeight="Medium"
+                                       Foreground="{StaticResource AppTextSecondary}"
+                                       VerticalAlignment="Center"
+                                       Margin="16,0,0,0"/>
+                        </Grid>
+
+                        <StackPanel Spacing="6" Margin="0,4,0,0">
+                            <TextBlock FontSize="12" Foreground="{StaticResource AppTextSecondary}">
+                                <Run Text="Осталось:"/>
+                                <Run Text="75 000 ₽" FontWeight="SemiBold" Foreground="{StaticResource AppText}"/>
+                                <Run Text=" • "/>
+                                <Run Text="45 дней"/>
+                            </TextBlock>
+                            
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="Начато: 01.11.2023" 
+                                           FontSize="12" 
+                                           Foreground="{StaticResource AppTextSecondary}"/>
+                                <TextBlock Text="•" FontSize="12" Foreground="{StaticResource AppTextSecondary}"/>
+                                <TextBlock Text="🟡" FontSize="12"/> 
+                                <TextBlock Text="Средний приоритет" 
+                                           FontSize="12" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource PriorityMedium}"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                    </StackPanel>
+                </Border>
+                
+                <Border Background="{StaticResource AppCardBackground}" 
+                        CornerRadius="12"
+                        Padding="24">
+                    
+                    <StackPanel Spacing="16">
+                        
+                        <StackPanel Orientation="Horizontal" Spacing="8" Opacity="0.7">
+                            <TextBlock Text="✈️" FontSize="14"/>
+                            <TextBlock Text="ПУТЕШЕСТВИЯ" 
+                                       FontSize="12" 
+                                       FontWeight="Bold" 
+                                       LetterSpacing="0.05"/>
+                        </StackPanel>
+                        
+                        <TextBlock Text="ПОЕЗДКА В ЯПОНИЮ" 
+                                   FontSize="20" 
+                                   FontWeight="Bold"/>
+
+                        <Grid ColumnDefinitions="*, Auto">
+                            <StackPanel Grid.Column="0" Spacing="10">
+                                <TextBlock FontSize="16" FontWeight="Medium">
+                                    <Run Text="62 000 ₽"/>
+                                    <Run Text="/" Foreground="{StaticResource AppTextSecondary}"/>
+                                    <Run Text="200 000 ₽" Foreground="{StaticResource AppTextSecondary}"/>
+                                </TextBlock>
+                                
+                                <ProgressBar Value="31" Minimum="0" Maximum="100"/>
+                            </StackPanel>
+
+                            <TextBlock Grid.Column="1" 
+                                       Text="31%" 
+                                       FontSize="16" 
+                                       FontWeight="Medium"
+                                       Foreground="{StaticResource AppTextSecondary}"
+                                       VerticalAlignment="Center"
+                                       Margin="16,0,0,0"/>
+                        </Grid>
+
+                        <StackPanel Spacing="6" Margin="0,4,0,0">
+                            <TextBlock FontSize="12" Foreground="{StaticResource AppTextSecondary}">
+                                <Run Text="Осталось:"/>
+                                <Run Text="138 000 ₽" FontWeight="SemiBold" Foreground="{StaticResource AppText}"/>
+                                <Run Text=" • "/>
+                                <Run Text="120 дней"/>
+                            </TextBlock>
+                            
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="Начато: 15.10.2023" 
+                                           FontSize="12" 
+                                           Foreground="{StaticResource AppTextSecondary}"/>
+                                <TextBlock Text="•" FontSize="12" Foreground="{StaticResource AppTextSecondary}"/>
+                                <TextBlock Text="🟢" FontSize="12"/> 
+                                <TextBlock Text="Низкий приоритет" 
+                                           FontSize="12" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource PriorityLow}"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                    </StackPanel>
+                </Border>
+                
+                <Border Background="{StaticResource AppCardBackground}" 
+                        CornerRadius="12"
+                        Padding="24">
+                    
+                    <StackPanel Spacing="16">
+                        
+                        <StackPanel Orientation="Horizontal" Spacing="8" Opacity="0.7">
+                            <TextBlock Text="🎓" FontSize="14"/>
+                            <TextBlock Text="ОБРАЗОВАНИЕ" 
+                                       FontSize="12" 
+                                       FontWeight="Bold" 
+                                       LetterSpacing="0.05"/>
+                        </StackPanel>
+                        
+                        <TextBlock Text="МАГИСТРАТУРА" 
+                                   FontSize="20" 
+                                   FontWeight="Bold"/>
+
+                        <Grid ColumnDefinitions="*, Auto">
+                            <StackPanel Grid.Column="0" Spacing="10">
+                                <TextBlock FontSize="16" FontWeight="Medium">
+                                    <Run Text="90 000 ₽"/>
+                                    <Run Text="/" Foreground="{StaticResource AppTextSecondary}"/>
+                                    <Run Text="300 000 ₽" Foreground="{StaticResource AppTextSecondary}"/>
+                                </TextBlock>
+                                
+                                <ProgressBar Value="30" Minimum="0" Maximum="100"/>
+                            </StackPanel>
+
+                            <TextBlock Grid.Column="1" 
+                                       Text="30%" 
+                                       FontSize="16" 
+                                       FontWeight="Medium"
+                                       Foreground="{StaticResource AppTextSecondary}"
+                                       VerticalAlignment="Center"
+                                       Margin="16,0,0,0"/>
+                        </Grid>
+
+                        <StackPanel Spacing="6" Margin="0,4,0,0">
+                            <TextBlock FontSize="12" Foreground="{StaticResource AppTextSecondary}">
+                                <Run Text="Осталось:"/>
+                                <Run Text="210 000 ₽" FontWeight="SemiBold" Foreground="{StaticResource AppText}"/>
+                                <Run Text=" • "/>
+                                <Run Text="180 дней"/>
+                            </TextBlock>
+                            
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="Начато: 01.09.2023" 
+                                           FontSize="12" 
+                                           Foreground="{StaticResource AppTextSecondary}"/>
+                                <TextBlock Text="•" FontSize="12" Foreground="{StaticResource AppTextSecondary}"/>
+                                <TextBlock Text="🔴" FontSize="12"/> 
+                                <TextBlock Text="Высокий приоритет" 
+                                           FontSize="12" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource PriorityHigh}"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                    </StackPanel>
+                </Border>
+                
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
