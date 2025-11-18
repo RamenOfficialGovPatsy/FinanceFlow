@@ -1,0 +1,19 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="1020"
+        xmlns:views="clr-namespace:FinanceFlow.Views" 
+        x:Class="FinanceFlow.Windows.EditGoalWindow"
+        Title="Редактирование цели" 
+        Icon="avares://FinanceFlow/Assets/Images/app_icon.ico"
+        Width="600" Height="1020"
+        MinWidth="600" MinHeight="1020"
+        MaxWidth="600" MaxHeight="1020"
+        CanResize="False" SizeToContent="Manual" WindowState="Normal"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    
+    <!-- Мы используем тот же самый UserControl -->
+    <views:AddEditGoalView />
+    
+</Window>

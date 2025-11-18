@@ -11,8 +11,8 @@ public partial class App : Application
 {
     public override void Initialize()
     {
-        this.EnableHotReload();
         AvaloniaXamlLoader.Load(this);
+        this.EnableHotReload();
     }
 
     public override void OnFrameworkInitializationCompleted()

@@ -1,89 +1,200 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:FinanceFlow"
-             x:Class="FinanceFlow.App">
+             x:Class="FinanceFlow.App"
+             RequestedThemeVariant="Dark">
+             <!-- Устанавливаем темную тему по умолчанию -->
 
     <!-- 
       РЕСУРСЫ ПРИЛОЖЕНИЯ
-      Определяем все цвета и шрифты здесь.
+      Определяем все цвета и шрифты здесь согласно Style Guide.
     -->
     <Application.Resources>
         <!-- 1. ШРИФТ -->
         <FontFamily x:Key="ManropeFont">avares://FinanceFlow/Assets/Fonts#Manrope</FontFamily>
         
-        <!-- 2. ЦВЕТОВАЯ ПАЛИТРА (из Style Guide) -->
+        <!-- 2. ЦВЕТОВАЯ ПАЛИТРА -->
         
-        <!-- Основные -->
-        <SolidColorBrush x:Key="AppBackground" Color="#1F2937" />
-        <SolidColorBrush x:Key="AppCardBackground" Color="#374151" />
-        <SolidColorBrush x:Key="AppText" Color="#F9FAFB" />
-        <SolidColorBrush x:Key="AppTextSecondary" Color="#9CA3AF" />
+        <!-- Основные фоны -->
+        <SolidColorBrush x:Key="AppBackground" Color="#1F2937" />      <!-- Глубокий темный фон (Main Window) -->
+        <SolidColorBrush x:Key="AppCardBackground" Color="#374151" />  <!-- Фон карточек и инпутов -->
+        <SolidColorBrush x:Key="AppModalBackground" Color="#2D3748" /> <!-- Фон модальных окон (чуть светлее основного) -->
         
-        <!-- Акцентные -->
-        <SolidColorBrush x:Key="AppPrimary" Color="#8B5CF6" />
-        <SolidColorBrush x:Key="AppAccent" Color="#6366F1" />
+        <!-- Текст -->
+        <SolidColorBrush x:Key="AppText" Color="#F9FAFB" />            <!-- Основной белый -->
+        <SolidColorBrush x:Key="AppTextSecondary" Color="#9CA3AF" />   <!-- Серый для подписей -->
+        <SolidColorBrush x:Key="AppBorderBrush" Color="#4B5563" />     <!-- Цвет границ инпутов -->
         
-        <!-- Приоритеты -->
-        <SolidColorBrush x:Key="PriorityHigh" Color="#EF4444" />
-        <SolidColorBrush x:Key="PriorityMedium" Color="#F59E0B" />
-        <SolidColorBrush x:Key="PriorityLow" Color="#10B981" />
+        <!-- Акцентные цвета -->
+        <SolidColorBrush x:Key="AppPrimary" Color="#8B5CF6" />         <!-- Фиолетовый (Кнопки, Прогресс) -->
+        <SolidColorBrush x:Key="AppPrimaryHover" Color="#7C3AED" />    <!-- Фиолетовый при наведении -->
+        <SolidColorBrush x:Key="AppAccent" Color="#6366F1" />          <!-- Индиго -->
+        <SolidColorBrush x:Key="AppButtonBackground" Color="#4C1D95" /> <!-- Темно-фиолетовый для кнопок -->
+
+        <!-- Статусы / Приоритеты -->
+        <SolidColorBrush x:Key="PriorityHigh" Color="#EF4444" />       <!-- Красный -->
+        <SolidColorBrush x:Key="PriorityMedium" Color="#F59E0B" />     <!-- Оранжевый -->
+        <SolidColorBrush x:Key="PriorityLow" Color="#10B981" />        <!-- Зеленый -->
+        <SolidColorBrush x:Key="ErrorBrush" Color="#EF4444" />         <!-- Цвет ошибки -->
+        
     </Application.Resources>
     
     <!-- 
       ГЛОБАЛЬНЫЕ СТИЛИ ПРИЛОЖЕНИЯ
-      Применяем стили ко всем элементам управления.
     -->
     <Application.Styles>
         <FluentTheme />
 
-        <!-- 1. Глобальный стиль: Окно -->
+        <!-- 1. Базовые настройки окна и шрифта -->
         <Style Selector="Window">
             <Setter Property="FontFamily" Value="{StaticResource ManropeFont}" />
             <Setter Property="Background" Value="{StaticResource AppBackground}" />
+            <Setter Property="Foreground" Value="{StaticResource AppText}" />
         </Style>
-
-        <!-- 2. Глобальный стиль: UserControl -->
+        
         <Style Selector="UserControl">
             <Setter Property="FontFamily" Value="{StaticResource ManropeFont}" />
-            <Setter Property="Background" Value="{StaticResource AppBackground}" />
+            <Setter Property="Foreground" Value="{StaticResource AppText}" />
         </Style>
 
-        <!-- 3. Глобальный стиль: TextBlock -->
+        <!-- 2. Текст -->
         <Style Selector="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource AppText}" />
         </Style>
-
-        <!-- 4. Глобальный стиль: ProgressBar (как в макете) -->
-        <Style Selector="ProgressBar">
-            <Setter Property="Height" Value="6"/>
-            <Setter Property="CornerRadius" Value="3"/>
-            <Setter Property="Background" Value="{StaticResource AppCardBackground}"/> <!-- Фон полосы -->
-            <Setter Property="Foreground" Value="{StaticResource AppPrimary}"/> <!-- Цвет прогресса -->
+        
+        <!-- Стиль для заголовков полей (Label) -->
+        <Style Selector="TextBlock.Label">
+            <Setter Property="Foreground" Value="{StaticResource AppTextSecondary}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Margin" Value="0,0,0,6" />
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
-
-        <!-- 5. Стили Кнопок (с именами) -->
         
-        <!-- Базовый стиль для всех кнопок -->
+        <!-- Стиль для заголовков модальных окон -->
+        <Style Selector="TextBlock.ModalTitle">
+            <Setter Property="FontSize" Value="24" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{StaticResource AppText}" />
+            <Setter Property="Margin" Value="0,0,0,24" />
+        </Style>
+
+        <!-- 3. Поля ввода (TextBox, NumericUpDown) -->
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="{StaticResource AppCardBackground}" />
+            <Setter Property="Foreground" Value="{StaticResource AppText}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="SelectionBrush" Value="{StaticResource AppPrimary}" />
+            <Setter Property="CaretBrush" Value="{StaticResource AppText}" />
+        </Style>
+        
+        <!-- Убираем синий фокус по умолчанию, делаем фиолетовым -->
+        <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimary}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <!-- NumericUpDown (для ввода сумм) -->
+        <Style Selector="NumericUpDown">
+            <Setter Property="Background" Value="{StaticResource AppCardBackground}" />
+            <Setter Property="Foreground" Value="{StaticResource AppText}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+
+        <!-- 4. Выпадающие списки (ComboBox) -->
+        <Style Selector="ComboBox">
+            <Setter Property="Background" Value="{StaticResource AppCardBackground}" />
+            <Setter Property="Foreground" Value="{StaticResource AppText}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+        
+        <Style Selector="ComboBoxItem">
+            <Setter Property="Foreground" Value="{StaticResource AppText}" />
+        </Style>
+        
+        <!-- Выбранный элемент в ComboBox -->
+        <Style Selector="ComboBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AppPrimary}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <!-- 5. Календарь (DatePicker) -->
+        <Style Selector="DatePicker">
+            <Setter Property="Background" Value="{StaticResource AppCardBackground}" />
+            <Setter Property="Foreground" Value="{StaticResource AppText}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+
+        <!-- 6. Кнопки -->
         <Style Selector="Button">
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="16,10" />
+            <Setter Property="Padding" Value="20,12" />
             <Setter Property="Cursor" Value="Hand" />
-        </Style>
-        
-        <!-- Класс для Основной кнопки (фиолетовая) -->
-        <Style Selector="Button.btn-primary">
-            <Setter Property="Background" Value="{StaticResource AppPrimary}" />
-            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="14" />
         </Style>
 
-        <!-- Класс для Второстепенной кнопки (серая) -->
-        <Style Selector="Button.btn-secondary">
+        <!-- Primary Button (Фиолетовая) -->
+        <Style Selector="Button.Primary">
+            <Setter Property="Background" Value="{StaticResource AppButtonBackground}" />
+            <Setter Property="Foreground" Value="#E0E7FF" />
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="Button.Primary:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AppPrimaryHover}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <!-- Кнопка Аналитика (Серый фон) -->
+        <Style Selector="Button.Analytics">
             <Setter Property="Background" Value="{StaticResource AppCardBackground}" />
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="Button.Analytics:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#4B5563" />
+        </Style>
+
+        <!-- Secondary Button (Прозрачная/Серая рамка) -->
+        <Style Selector="Button.Secondary">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Foreground" Value="{StaticResource AppText}" />
-            <Setter Property="Padding" Value="12,8" />
+        </Style>
+        <Style Selector="Button.Secondary:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AppCardBackground}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppTextSecondary}" />
+            <Setter Property="Foreground" Value="White" />
         </Style>
         
+        <!-- Danger Button (Красная для удаления) -->
+        <Style Selector="Button.Danger">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppCardBackground}" />
+            <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+        </Style>
+
+        <!-- 7. Прогресс-бар -->
+        <Style Selector="ProgressBar">
+            <Setter Property="Height" Value="6"/>
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="Background" Value="{StaticResource AppCardBackground}"/>
+            <Setter Property="Foreground" Value="{StaticResource AppButtonBackground}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
     </Application.Styles>
 </Application>

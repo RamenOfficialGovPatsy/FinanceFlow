@@ -5,10 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="720"
         x:Class="FinanceFlow.MainWindow"
-        
+        Icon="avares://FinanceFlow/Assets/Images/app_icon.ico"
         Title="FinanceFlow"
         Width="1280" Height="720"
-        MinWidth="1024" MinHeight="600"
+        MinWidth="1024" MinHeight="850"
+        WindowStartupLocation="CenterScreen" ShowInTaskbar="True"
+        CanResize="True" SizeToContent="Manual" WindowState="Normal"
         
         FontFamily="{StaticResource ManropeFont}"
         Background="{StaticResource AppBackground}"

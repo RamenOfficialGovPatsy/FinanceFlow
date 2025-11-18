@@ -15,10 +15,26 @@
         <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="40,20,40,10">
             
             <Button Grid.Column="0" 
-                    Content="📊 Аналитика" 
-                    Classes="btn-secondary"/> <Button Grid.Column="2" 
-                    Content="＋ Новая цель" 
-                    Classes="btn-primary"/> </Grid>
+                    Classes="Analytics">
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <TextBlock Text="📊" FontFamily="Segoe UI Emoji, Apple Color Emoji, System" FontSize="16" VerticalAlignment="Center"/>
+                    <TextBlock Text="Аналитика"
+                                Foreground="{StaticResource AppPrimary}"
+                                FontWeight="SemiBold"
+                                VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <!-- Кнопка Новая цель: Класс Primary (Темно-фиолетовая) -->
+            <Button Grid.Column="2"
+                    Click="AddGoalButton_Click"
+                    Classes="Primary">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <TextBlock Text="＋" FontSize="16"/>
+                    <TextBlock Text="Новая цель" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+            </Grid>
 
         <ScrollViewer Grid.Row="1">
             <StackPanel Spacing="20" Margin="40,10,40,40">
@@ -29,11 +45,11 @@
                     
                     <Border.ContextMenu>
                         <ContextMenu>
-                            <MenuItem Header="✏️ Редактировать цель"/>
-                            <MenuItem Header="💰 Добавить пополнение"/>
-                            <MenuItem Header="📈 История пополнений"/>
+                            <MenuItem Header="✏️ Редактировать цель" Click="EditGoalMenuItem_Click"/>
+                            <MenuItem Header="💰 Добавить пополнение" Click="AddDepositMenuItem_Click"/>
+                            <MenuItem Header="📈 История пополнений" Click="ShowHistoryMenuItem_Click"/>
                             <Separator/>
-                            <MenuItem Header="❌ Удалить цель"/>
+                            <MenuItem Header="❌ Удалить цель" Click="DeleteGoalMenuItem_Click"/>
                         </ContextMenu>
                     </Border.ContextMenu>
 
@@ -72,17 +88,19 @@
                         <StackPanel Spacing="6" Margin="0,4,0,0">
                             <TextBlock FontSize="12" Foreground="{StaticResource AppTextSecondary}">
                                 <Run Text="Осталось:"/>
-                                <Run Text="75 000 ₽" FontWeight="SemiBold" Foreground="{StaticResource AppText}"/>
+                                <Run Text="75 000 ₽" FontWeight="SemiBold"/>
                                 <Run Text=" • "/>
                                 <Run Text="45 дней"/>
                             </TextBlock>
                             
                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                <TextBlock Text="Начато: 01.11.2023" 
-                                           FontSize="12" 
+                                <TextBlock Text="Начато: 01.11.2023" FontSize="12" 
                                            Foreground="{StaticResource AppTextSecondary}"/>
                                 <TextBlock Text="•" FontSize="12" Foreground="{StaticResource AppTextSecondary}"/>
-                                <TextBlock Text="🟡" FontSize="12"/> 
+                                
+                                <!-- ДОБАВЛЕНО: FontFamily -->
+                                <TextBlock Text="🟡" FontSize="12" FontFamily="Segoe UI Emoji, Apple Color Emoji, System"/> 
+                                
                                 <TextBlock Text="Средний приоритет" 
                                            FontSize="12" 
                                            FontWeight="SemiBold"
@@ -134,17 +152,18 @@
                         <StackPanel Spacing="6" Margin="0,4,0,0">
                             <TextBlock FontSize="12" Foreground="{StaticResource AppTextSecondary}">
                                 <Run Text="Осталось:"/>
-                                <Run Text="138 000 ₽" FontWeight="SemiBold" Foreground="{StaticResource AppText}"/>
+                                <Run Text="138 000 ₽" FontWeight="SemiBold"/>
                                 <Run Text=" • "/>
                                 <Run Text="120 дней"/>
                             </TextBlock>
                             
                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                <TextBlock Text="Начато: 15.10.2023" 
-                                           FontSize="12" 
+                                <TextBlock Text="Начато: 15.10.2023" FontSize="12" 
                                            Foreground="{StaticResource AppTextSecondary}"/>
                                 <TextBlock Text="•" FontSize="12" Foreground="{StaticResource AppTextSecondary}"/>
-                                <TextBlock Text="🟢" FontSize="12"/> 
+                                
+                                <!-- ДОБАВЛЕНО: FontFamily -->
+                                <TextBlock Text="🟢" FontSize="12" FontFamily="Segoe UI Emoji, Apple Color Emoji, System"/> 
                                 <TextBlock Text="Низкий приоритет" 
                                            FontSize="12" 
                                            FontWeight="SemiBold"
@@ -196,17 +215,19 @@
                         <StackPanel Spacing="6" Margin="0,4,0,0">
                             <TextBlock FontSize="12" Foreground="{StaticResource AppTextSecondary}">
                                 <Run Text="Осталось:"/>
-                                <Run Text="210 000 ₽" FontWeight="SemiBold" Foreground="{StaticResource AppText}"/>
+                                <Run Text="210 000 ₽" FontWeight="SemiBold"/>
                                 <Run Text=" • "/>
                                 <Run Text="180 дней"/>
                             </TextBlock>
                             
                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                <TextBlock Text="Начато: 01.09.2023" 
-                                           FontSize="12" 
+                                <TextBlock Text="Начато: 01.09.2023" FontSize="12" 
                                            Foreground="{StaticResource AppTextSecondary}"/>
                                 <TextBlock Text="•" FontSize="12" Foreground="{StaticResource AppTextSecondary}"/>
-                                <TextBlock Text="🔴" FontSize="12"/> 
+                                
+                                <!-- ДОБАВЛЕНО: FontFamily -->
+                                <TextBlock Text="🔴" FontSize="12" FontFamily="Segoe UI Emoji, Apple Color Emoji, System"/> 
+                                
                                 <TextBlock Text="Высокий приоритет" 
                                            FontSize="12" 
                                            FontWeight="SemiBold"
