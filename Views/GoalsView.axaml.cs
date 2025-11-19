@@ -36,7 +36,8 @@ namespace FinanceFlow.Views
 
         private void AddDepositMenuItem_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
-            // Позже добавлю DepositWindow
+            var depositWindow = new DepositWindow();
+            depositWindow.ShowDialog(VisualRoot as Window);
         }
 
         private void ShowHistoryMenuItem_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

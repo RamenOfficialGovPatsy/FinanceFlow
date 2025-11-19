@@ -1,0 +1,18 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="using:FinanceFlow.Views"
+        x:Class="FinanceFlow.Windows.DepositWindow"
+        Title="Пополнение цели"
+        Width="520" Height="750"
+        SizeToContent="Manual" WindowState="Normal"
+        WindowStartupLocation="CenterOwner" CanResize="False"
+        ShowInTaskbar="False"
+        
+        Icon="avares://FinanceFlow/Assets/Images/app_icon.ico"
+        FontFamily="{StaticResource ManropeFont}"
+        Background="{StaticResource AppBackground}"
+        Foreground="{StaticResource AppText}">
+    
+    <views:DepositView />
+    
+</Window>
