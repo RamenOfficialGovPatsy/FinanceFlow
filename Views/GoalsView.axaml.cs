@@ -1,5 +1,5 @@
-using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using FinanceFlow.ViewModels;
 using FinanceFlow.Windows;
@@ -19,7 +19,7 @@ namespace FinanceFlow.Views
         }
 
         // Обработчик кнопки "Новая цель"
-        private void AddGoalButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        private void AddGoalButton_Click(object? sender, RoutedEventArgs e)
         {
             var addGaolWindow = new AddGoalWindow();
             addGaolWindow.DataContext = new AddEditGoalViewModel();
@@ -27,25 +27,29 @@ namespace FinanceFlow.Views
         }
 
         // Обработчики контекстного меню
-        private void EditGoalMenuItem_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        private void EditGoalMenuItem_Click(object? sender, RoutedEventArgs e)
         {
             var editGoalWindow = new EditGoalWindow();
             editGoalWindow.DataContext = new AddEditGoalViewModel(isEditMode: true);
             editGoalWindow.Show();
         }
 
-        private void AddDepositMenuItem_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        private async void AddDepositMenuItem_Click(object? sender, RoutedEventArgs e)
         {
             var depositWindow = new DepositWindow();
-            depositWindow.ShowDialog(VisualRoot as Window);
+
+            if (VisualRoot is Window parentWindow)
+            {
+                await depositWindow.ShowDialog(parentWindow);
+            }
         }
 
-        private void ShowHistoryMenuItem_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        private void ShowHistoryMenuItem_Click(object? sender, RoutedEventArgs e)
         {
             // Позже добавлю историю
         }
 
-        private void DeleteGoalMenuItem_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        private void DeleteGoalMenuItem_Click(object? sender, RoutedEventArgs e)
         {
             // Позже добавлю подтверждение удаления
         }

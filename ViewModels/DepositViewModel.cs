@@ -95,6 +95,7 @@ namespace FinanceFlow.ViewModels
         }
 
         // Конструктор без параметров для Design-time (чтобы XAML не ругался)
+        // Конструктор без параметров для Design-time
         public DepositViewModel()
         {
             _goal = new Goal
@@ -103,6 +104,13 @@ namespace FinanceFlow.ViewModels
                 CurrentAmount = 45000,
                 TargetAmount = 120000
             };
+
+            // Инициализируем команды-заглушки, чтобы избежать Warning CS8618
+            AddDepositCommand = new AsyncRelayCommand(() => Task.CompletedTask);
+            CancelCommand = new AsyncRelayCommand(() => Task.CompletedTask);
+            EditHistoryItemCommand = new AsyncRelayCommand<DepositItemViewModel>(_ => Task.CompletedTask);
+            DeleteHistoryItemCommand = new AsyncRelayCommand<DepositItemViewModel>(_ => Task.CompletedTask);
+
             LoadMockHistory();
         }
 
@@ -204,7 +212,8 @@ namespace FinanceFlow.ViewModels
         private readonly Func<T?, Task> _execute;
         private readonly Func<T?, bool>? _canExecute;
 
-        public event EventHandler? CanExecuteChanged;
+        // Добавляем пустые add/remove, чтобы убрать warning "Event is never used"
+        public event EventHandler? CanExecuteChanged { add { } remove { } }
 
         public AsyncRelayCommand(Func<T?, Task> execute, Func<T?, bool>? canExecute = null)
         {
