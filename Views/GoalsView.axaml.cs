@@ -18,6 +18,19 @@ namespace FinanceFlow.Views
             AvaloniaXamlLoader.Load(this);
         }
 
+        private async void AnalyticsButton_Click(object? sender, RoutedEventArgs e)
+        {
+            var analyticsWindow = new AnalyticsWindow();
+
+            // ViewModel подключим позже (на 4 этапе)
+            // analyticsWindow.DataContext = new AnalyticsViewModel(); 
+
+            if (VisualRoot is Window parentWindow)
+            {
+                await analyticsWindow.ShowDialog(parentWindow);
+            }
+        }
+
         // Обработчик кнопки "Новая цель"
         private void AddGoalButton_Click(object? sender, RoutedEventArgs e)
         {

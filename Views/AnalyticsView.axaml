@@ -1,0 +1,255 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="using:FinanceFlow"
+             mc:Ignorable="d" d:DesignWidth="780" d:DesignHeight="1300"
+             x:Class="FinanceFlow.Views.AnalyticsView">
+
+    <Grid RowDefinitions="Auto, *, Auto" Margin="30, 30, 30, 20">
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="0,0,0,30">
+            <Border Width="40" Height="40" CornerRadius="8" Background="{StaticResource AppCardBackground}">
+                <TextBlock Text="📊" 
+                           FontFamily="Segoe UI Emoji, Apple Color Emoji, System" 
+                           FontSize="24" 
+                           HorizontalAlignment="Center" 
+                           VerticalAlignment="Center"/>
+            </Border>
+            <TextBlock Text="Аналитика" 
+                       FontSize="28" 
+                       FontWeight="Bold" 
+                       VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,15,0">
+            <StackPanel Spacing="24">
+
+                <Border Background="{StaticResource AppCardBackground}" 
+                        CornerRadius="12" 
+                        Padding="40"
+                        Width="700"
+                        HorizontalAlignment="Left">
+                    <StackPanel Spacing="30">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock Text="📈" FontFamily="Segoe UI Emoji, Apple Color Emoji, System" FontSize="24"/>
+                            <TextBlock Text="ОБЩАЯ СТАТИСТИКА" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#F3F4F6" LetterSpacing="1"/>
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="*, 40, *" RowDefinitions="Auto, 24, Auto, 24, Auto">
+                            <Grid Grid.Row="0" Grid.Column="0" ColumnDefinitions="Auto, *, Auto">
+                                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                    <Ellipse Width="8" Height="8" Fill="#311B92" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Всего целей:" Foreground="{StaticResource AppTextSecondary}" FontSize="16"/>
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" Text="8" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource AppTextSecondary}"/>
+                            </Grid>
+                            <Grid Grid.Row="2" Grid.Column="0" ColumnDefinitions="Auto, *, Auto">
+                                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                    <Ellipse Width="8" Height="8" Fill="#065F46" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Выполнено:" Foreground="{StaticResource AppTextSecondary}" FontSize="16"/>
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" Text="3 (37.5%)" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource AppTextSecondary}"/>
+                            </Grid>
+                            <Grid Grid.Row="4" Grid.Column="0" ColumnDefinitions="Auto, *, Auto">
+                                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                    <Ellipse Width="8" Height="8" Fill="#B45309" VerticalAlignment="Center"/>
+                                    <TextBlock Text="В процессе:" Foreground="{StaticResource AppTextSecondary}" FontSize="16"/>
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" Text="4" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource AppTextSecondary}"/>
+                            </Grid>
+                            
+                            <Grid Grid.Row="0" Grid.Column="2" ColumnDefinitions="Auto, *, Auto">
+                                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                    <Ellipse Width="8" Height="8" Fill="#880E4F" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Просрочено:" Foreground="{StaticResource AppTextSecondary}" FontSize="16"/>
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" Text="1" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource AppTextSecondary}"/>
+                            </Grid>
+                            <Grid Grid.Row="2" Grid.Column="2" ColumnDefinitions="Auto, *, Auto">
+                                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                    <Ellipse Width="8" Height="8" Fill="#1A237E" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Общая сумма:" Foreground="{StaticResource AppTextSecondary}" FontSize="16"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                                    <TextBlock Text="485 000 ₽" FontSize="16" FontWeight="SemiBold" TextAlignment="Right" Foreground="{StaticResource AppTextSecondary}"/>
+                                </StackPanel>
+                            </Grid>
+                            <Grid Grid.Row="4" Grid.Column="2" ColumnDefinitions="Auto, *, Auto">
+                                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                    <Ellipse Width="8" Height="8" Fill="#006064" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Накоплено:" Foreground="{StaticResource AppTextSecondary}" FontSize="16"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBlock Text="215 000 ₽" FontSize="16" FontWeight="SemiBold" TextAlignment="Right" Foreground="{StaticResource AppTextSecondary}"/>
+                                    <TextBlock Text="(44.3%)" FontSize="12" Foreground="{StaticResource AppTextSecondary}" TextAlignment="Right" Margin="0,2,0,0" Opacity="0.7"/>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="{StaticResource AppCardBackground}" 
+                        CornerRadius="12" 
+                        Padding="40"
+                        Width="700"
+                        HorizontalAlignment="Left">
+                    
+                    <StackPanel Spacing="30">
+                        <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+                            <TextBlock Text="🗂️" FontFamily="Segoe UI Emoji, Apple Color Emoji, System" FontSize="24"/>
+                            <TextBlock Text="РАСПРЕДЕЛЕНИЕ ПО КАТЕГОРИЯМ" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#F3F4F6" LetterSpacing="1"/>
+                        </StackPanel>
+
+                        <local:DonutChart x:Name="CategoryChart"
+                                          Width="200" Height="200"
+                                          Thickness="35"
+                                          HorizontalAlignment="Center"/>
+                        
+                        <Grid ColumnDefinitions="*, 16, *" RowDefinitions="Auto, 16, Auto, 16, Auto">
+                            <Border Grid.Row="0" Grid.Column="0" Background="#2D3748" CornerRadius="8" Padding="16">
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <TextBlock Grid.Column="0" Text="📱" FontSize="24" VerticalAlignment="Center" Margin="0,0,12,0" FontFamily="Segoe UI Emoji, Apple Color Emoji, System"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="42%" FontSize="20" FontWeight="Bold" Foreground="#F3F4F6"/>
+                                        <TextBlock Text="Техника" FontSize="12" Foreground="{StaticResource AppTextSecondary}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="2" Background="#2D3748" CornerRadius="8" Padding="16">
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <TextBlock Grid.Column="0" Text="✈️" FontSize="24" VerticalAlignment="Center" Margin="0,0,12,0" FontFamily="Segoe UI Emoji, Apple Color Emoji, System"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="25%" FontSize="20" FontWeight="Bold" Foreground="#F3F4F6"/>
+                                        <TextBlock Text="Путешествия" FontSize="12" Foreground="{StaticResource AppTextSecondary}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                            <Border Grid.Row="2" Grid.Column="0" Background="#2D3748" CornerRadius="8" Padding="16">
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <TextBlock Grid.Column="0" Text="🚗" FontSize="24" VerticalAlignment="Center" Margin="0,0,12,0" FontFamily="Segoe UI Emoji, Apple Color Emoji, System"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="15%" FontSize="20" FontWeight="Bold" Foreground="#F3F4F6"/>
+                                        <TextBlock Text="Авто" FontSize="12" Foreground="{StaticResource AppTextSecondary}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                            <Border Grid.Row="2" Grid.Column="2" Background="#2D3748" CornerRadius="8" Padding="16">
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <TextBlock Grid.Column="0" Text="🏠" FontSize="24" VerticalAlignment="Center" Margin="0,0,12,0" FontFamily="Segoe UI Emoji, Apple Color Emoji, System"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="10%" FontSize="20" FontWeight="Bold" Foreground="#F3F4F6"/>
+                                        <TextBlock Text="Жилье" FontSize="12" Foreground="{StaticResource AppTextSecondary}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                            <Border Grid.Row="4" Grid.Column="0" Background="#2D3748" CornerRadius="8" Padding="16">
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <TextBlock Grid.Column="0" Text="🎓" FontSize="24" VerticalAlignment="Center" Margin="0,0,12,0" FontFamily="Segoe UI Emoji, Apple Color Emoji, System"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="8%" FontSize="20" FontWeight="Bold" Foreground="#F3F4F6"/>
+                                        <TextBlock Text="Образование" FontSize="12" Foreground="{StaticResource AppTextSecondary}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="{StaticResource AppCardBackground}" 
+                        CornerRadius="12" 
+                        Padding="40"
+                        Width="700"
+                        HorizontalAlignment="Left">
+                    
+                    <StackPanel Spacing="24">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock Text="⏰" FontFamily="Segoe UI Emoji, Apple Color Emoji, System" FontSize="24"/>
+                            <TextBlock Text="БЛИЖАЙШИЕ ДЕДЛАЙНЫ" 
+                                       FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" 
+                                       Foreground="#F3F4F6" LetterSpacing="1"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="12">
+                            <Border Background="#1F2937" CornerRadius="8" Padding="16, 10">
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <Ellipse Grid.Column="0" Width="20" Height="20" Fill="#EF4444" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                    <TextBlock Grid.Column="1" FontSize="16" VerticalAlignment="Center">
+                                        <Run Text="15.01.2024" Foreground="{StaticResource AppTextSecondary}"/>
+                                        <Run Text=" • " Foreground="{StaticResource AppTextSecondary}"/>
+                                        <Run Text="iPhone 15" Foreground="#F3F4F6" FontWeight="Medium"/>
+                                        <Run Text=" • " Foreground="{StaticResource AppTextSecondary}"/>
+                                        <Run Text="45 дней" Foreground="#EF4444"/>
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
+                            <Border Background="#1F2937" CornerRadius="8" Padding="16, 10">
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <Ellipse Grid.Column="0" Width="20" Height="20" Fill="#F59E0B" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                    <TextBlock Grid.Column="1" FontSize="16" VerticalAlignment="Center">
+                                        <Run Text="01.03.2024" Foreground="{StaticResource AppTextSecondary}"/>
+                                        <Run Text=" • " Foreground="{StaticResource AppTextSecondary}"/>
+                                        <Run Text="Отпуск в Сочи" Foreground="#F3F4F6" FontWeight="Medium"/>
+                                        <Run Text=" • " Foreground="{StaticResource AppTextSecondary}"/>
+                                        <Run Text="90 дней" Foreground="#F59E0B"/>
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
+                            <Border Background="#1F2937" CornerRadius="8" Padding="16, 10">
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <Ellipse Grid.Column="0" Width="20" Height="20" Fill="#10B981" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                    <TextBlock Grid.Column="1" FontSize="16" VerticalAlignment="Center">
+                                        <Run Text="15.04.2024" Foreground="{StaticResource AppTextSecondary}"/>
+                                        <Run Text=" • " Foreground="{StaticResource AppTextSecondary}"/>
+                                        <Run Text="Ноутбук" Foreground="#F3F4F6" FontWeight="Medium"/>
+                                        <Run Text=" • " Foreground="{StaticResource AppTextSecondary}"/>
+                                        <Run Text="135 дней" Foreground="#10B981"/>
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Height="20"/>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal" 
+                    Spacing="16" 
+                    HorizontalAlignment="Center"
+                    Margin="0,20,0,0">
+            
+            <Button Classes="Primary"
+                    Height="44"
+                    Padding="24,0"
+                    Click="GeneratePdfButton_Click">
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="📊" FontFamily="Segoe UI Emoji, Apple Color Emoji, System" FontSize="18" VerticalAlignment="Center"/>
+                    <TextBlock Text="Сгенерировать PDF отчет" 
+                               Foreground="#E0E7FF" 
+                               FontWeight="SemiBold" 
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <Button Height="44"
+                    Background="#1F2937"
+                    BorderBrush="{StaticResource AppBorderBrush}"
+                    BorderThickness="1"
+                    Padding="24,0"
+                    Click="CloseButton_Click">
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <TextBlock Text="❌" FontFamily="Segoe UI Emoji, Apple Color Emoji, System" FontSize="14" Foreground="#EF4444" VerticalAlignment="Center"/>
+                    <TextBlock Text="Закрыть" 
+                               Foreground="{StaticResource AppTextSecondary}" 
+                               FontWeight="SemiBold" 
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+    </Grid>
+</UserControl>

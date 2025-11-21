@@ -15,7 +15,8 @@
         <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="40,20,40,10">
             
             <Button Grid.Column="0" 
-                    Classes="Analytics">
+                    Classes="Analytics"
+                    Click="AnalyticsButton_Click">
                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                     <TextBlock Text="📊" FontFamily="Segoe UI Emoji, Apple Color Emoji, System" FontSize="16" VerticalAlignment="Center"/>
                     <TextBlock Text="Аналитика"
@@ -116,9 +117,8 @@
                         Padding="24">
                     
                     <StackPanel Spacing="16">
-                        
                         <StackPanel Orientation="Horizontal" Spacing="8" Opacity="0.7">
-                            <TextBlock Text="✈️" FontSize="14"/>
+                            <TextBlock Text="✈️" FontSize="14" FontFamily="Segoe UI Emoji, Apple Color Emoji, System"/>
                             <TextBlock Text="ПУТЕШЕСТВИЯ" 
                                        FontSize="12" 
                                        FontWeight="Bold" 
@@ -179,9 +179,8 @@
                         Padding="24">
                     
                     <StackPanel Spacing="16">
-                        
                         <StackPanel Orientation="Horizontal" Spacing="8" Opacity="0.7">
-                            <TextBlock Text="🎓" FontSize="14"/>
+                            <TextBlock Text="🎓" FontSize="14" FontFamily="Segoe UI Emoji, Apple Color Emoji, System"/>
                             <TextBlock Text="ОБРАЗОВАНИЕ" 
                                        FontSize="12" 
                                        FontWeight="Bold" 

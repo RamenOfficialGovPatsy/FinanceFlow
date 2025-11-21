@@ -196,5 +196,24 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
+        <!-- 8. Круговой график(Donut Chart) -->
+        <Style Selector="Border.CategoryCard">
+            <Setter Property="Background" Value="{StaticResource AppCardBackground}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="MinWidth" Value="110" />
+        </Style>
+        
+        <Style Selector="TextBlock.PercentText">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{StaticResource AppText}" />
+        </Style>
+        
+        <Style Selector="TextBlock.CategoryName">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{StaticResource AppTextSecondary}" />
+        </Style>
+
     </Application.Styles>
 </Application>
