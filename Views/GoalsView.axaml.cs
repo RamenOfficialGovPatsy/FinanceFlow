@@ -57,11 +57,6 @@ namespace FinanceFlow.Views
             }
         }
 
-        private void ShowHistoryMenuItem_Click(object? sender, RoutedEventArgs e)
-        {
-            // Позже добавлю историю
-        }
-
         private void DeleteGoalMenuItem_Click(object? sender, RoutedEventArgs e)
         {
             // Позже добавлю подтверждение удаления

@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
@@ -20,19 +19,16 @@ namespace FinanceFlow.Views
         // Обработчик кнопки "Отмена"
         private void CancelButton_Click(object? sender, RoutedEventArgs e)
         {
-            if (this.Parent is Window window)
+            if (VisualRoot is Window parentWindow)
             {
-                window.Close();
+                parentWindow.Close();
             }
         }
 
         // Обработчик кнопки "Сохранить"
         private void SaveButton_Click(object? sender, RoutedEventArgs e)
         {
-            if (this.Parent is Window window)
-            {
-                window.Close();
-            }
+            Console.WriteLine("Кнопка 'Сохранить' нажата");
         }
     }
 }

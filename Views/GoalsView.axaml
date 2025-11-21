@@ -47,8 +47,8 @@
                     <Border.ContextMenu>
                         <ContextMenu>
                             <MenuItem Header="✏️ Редактировать цель" Click="EditGoalMenuItem_Click"/>
+                            <Separator/>
                             <MenuItem Header="💰 Добавить пополнение" Click="AddDepositMenuItem_Click"/>
-                            <MenuItem Header="📈 История пополнений" Click="ShowHistoryMenuItem_Click"/>
                             <Separator/>
                             <MenuItem Header="❌ Удалить цель" Click="DeleteGoalMenuItem_Click"/>
                         </ContextMenu>
