@@ -1,7 +1,4 @@
 using FinanceFlow.Models;
-using System;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 
 namespace FinanceFlow.ViewModels
 {
@@ -32,7 +29,7 @@ namespace FinanceFlow.ViewModels
 
         // Категория
         public int CategoryId => _goal.CategoryId;
-        public string CategoryName => _goal.GoalCategory?.Name ?? "Без категории";
+        public string CategoryName => _goal.GoalCategory?.Name ?? "Без категории".ToUpper();
         public string CategoryIcon => _goal.GoalCategory?.Icon ?? "⭐";
         public string CategoryColor => _goal.GoalCategory?.Color ?? "#6B7280";
 

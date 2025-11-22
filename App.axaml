@@ -1,6 +1,7 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:FinanceFlow"
+             xmlns:converters="using:FinanceFlow.Converters"
              x:Class="FinanceFlow.App"
              RequestedThemeVariant="Dark">
              <!-- Устанавливаем темную тему по умолчанию -->
@@ -37,6 +38,12 @@
         <SolidColorBrush x:Key="PriorityLow" Color="#10B981" />        <!-- Зеленый -->
         <SolidColorBrush x:Key="ErrorBrush" Color="#EF4444" />         <!-- Цвет ошибки -->
         
+        <!-- Конвертеры -->
+        <converters:ProgressToColorConverter x:Key="ProgressToColorConverter"/>
+        <converters:PriorityToColorConverter x:Key="PriorityToColorConverter"/>
+        <converters:DateToDaysConverter x:Key="DateToDaysConverter"/>
+        <converters:ProgressToWidthConverter x:Key="ProgressToWidthConverter"/>
+    
     </Application.Resources>
     
     <!-- 

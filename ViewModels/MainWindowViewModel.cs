@@ -1,68 +1,71 @@
-using FinanceFlow.Models;
 using FinanceFlow.Services.Interfaces;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace FinanceFlow.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
-        private readonly IGoalService? _goalService;
+        private readonly IGoalService _goalService;
         private ObservableCollection<GoalViewModel> _goals = new ObservableCollection<GoalViewModel>();
 
+        // Коллекция целей для отображения в UI
         public ObservableCollection<GoalViewModel> Goals
         {
             get => _goals;
             set => SetProperty(ref _goals, value);
         }
 
+        // Команды
         public ICommand LoadGoalsCommand { get; }
+        public ICommand DeleteGoalCommand { get; } // Команда для контекстного меню
 
-        public MainWindowViewModel(IGoalService? goalService)
+        // Конструктор
+        public MainWindowViewModel(IGoalService goalService)
         {
-            _goalService = goalService;
+            _goalService = goalService ?? throw new ArgumentNullException(nameof(goalService));
+
             LoadGoalsCommand = new AsyncRelayCommand(LoadGoalsAsync);
+            DeleteGoalCommand = new AsyncRelayCommand<GoalViewModel>(DeleteGoalAsync);
 
-            InitializeTestData();
-            // Временные тестовые данные
-            //  Goals.Add(new Goal { GoalId = 1, Title = "Тестовый iPhone", CurrentAmount = 45000, TargetAmount = 120000 });
-            //  Goals.Add(new Goal { GoalId = 2, Title = "Тестовая поездка", CurrentAmount = 25000, TargetAmount = 80000 });
+            // При старте сразу загружаем данные
+            _ = LoadGoalsAsync();
         }
 
-        private void InitializeTestData()
+        // Загрузка данных из БД
+        public async Task LoadGoalsAsync()
         {
-            var testGoal1 = new Goal
-            {
-                GoalId = 1,
-                Title = "IPHONE 15 PRO",
-                CurrentAmount = 45000,
-                TargetAmount = 120000,
-                CategoryId = 1,
-                Priority = 2,
-                StartDate = DateTime.Now.AddDays(-45),
-                EndDate = DateTime.Now.AddDays(45)
-            };
+            if (_goalService == null) return;
 
-            var testGoal2 = new Goal
-            {
-                GoalId = 2,
-                Title = "ПОЕЗДКА В ЯПОНИЮ",
-                CurrentAmount = 62000,
-                TargetAmount = 200000,
-                CategoryId = 3,
-                Priority = 3,
-                StartDate = DateTime.Now.AddDays(-120),
-                EndDate = DateTime.Now.AddDays(120)
-            };
+            // Получаем список целей из сервиса
+            var goalsFromDb = await _goalService.GetAllGoalsAsync();
 
-            Goals.Add(new GoalViewModel(testGoal1));
-            Goals.Add(new GoalViewModel(testGoal2));
+            // Очищаем текущий список и заполняем новыми данными
+            Goals.Clear();
+            foreach (var goal in goalsFromDb)
+            {
+                // Оборачиваем модель (Goal) во ViewModel (GoalViewModel) для удобства UI
+                Goals.Add(new GoalViewModel(goal));
+            }
         }
 
-        private async Task LoadGoalsAsync()
+        // Удаление цели
+        private async Task DeleteGoalAsync(GoalViewModel? goalVm)
         {
-            await Task.Delay(100);
+            if (goalVm == null) return;
+
+            // Вызываем сервис для удаления из БД
+            var result = await _goalService.DeleteGoalAsync(goalVm.GoalId);
+
+            if (result.success)
+            {
+                // Если удаление в БД прошло успешно, убираем из списка на экране
+                Goals.Remove(goalVm);
+            }
+            else
+            {
+                Console.WriteLine($"Ошибка удаления: {result.message}");
+            }
         }
     }
 }

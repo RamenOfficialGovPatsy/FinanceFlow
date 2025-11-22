@@ -10,9 +10,23 @@ namespace FinanceFlow.Converters
         {
             if (value is DateTime date)
             {
+                // 1. Сначала определяем режим (Text или Color), так как он нужен везде
+                string mode = parameter as string ?? "Text";
+
+                // 2. ЗАЩИТА: Если дата "пустая" (0001-01-01)
+                if (date == DateTime.MinValue)
+                {
+                    // Если просят цвет - возвращаем серый
+                    if (mode == "Color")
+                        return SolidColorBrush.Parse("#6B7280");
+
+                    // Если просят текст - возвращаем сообщение об ошибке
+                    return "Ошибка даты";
+                }
+
+                // 3. Основная логика
                 var today = DateTime.Today;
                 var diff = (date.Date - today).Days;
-                string mode = parameter as string ?? "Text";
 
                 // Режим "Color": Возвращаем кисть для цвета текста
                 if (mode == "Color")

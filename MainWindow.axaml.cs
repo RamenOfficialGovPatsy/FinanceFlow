@@ -1,7 +1,5 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using FinanceFlow.ViewModels;
 using FinanceFlow.Views;
 
 namespace FinanceFlow
@@ -16,7 +14,7 @@ namespace FinanceFlow
             Content = new GoalsView();
 
             // DataContext
-            DataContext = new MainWindowViewModel(null);
+            //  DataContext = new MainWindowViewModel(null);
         }
 
         private void InitializeComponent()

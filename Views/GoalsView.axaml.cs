@@ -22,8 +22,8 @@ namespace FinanceFlow.Views
         {
             var analyticsWindow = new AnalyticsWindow();
 
-            // ViewModel подключим позже (на 4 этапе)
-            // analyticsWindow.DataContext = new AnalyticsViewModel(); 
+            // ВАЖНО: Здесь мы потом подключим сервис аналитики
+            // analyticsWindow.DataContext = new AnalyticsViewModel(...);
 
             if (VisualRoot is Window parentWindow)
             {
@@ -31,35 +31,65 @@ namespace FinanceFlow.Views
             }
         }
 
-        // Обработчик кнопки "Новая цель"
-        private void AddGoalButton_Click(object? sender, RoutedEventArgs e)
+        private async void AddGoalButton_Click(object? sender, RoutedEventArgs e)
         {
-            var addGaolWindow = new AddGoalWindow();
-            addGaolWindow.DataContext = new AddEditGoalViewModel();
-            addGaolWindow.Show();
+            var addGoalWindow = new AddGoalWindow();
+            // При закрытии окна обновляем список
+            if (VisualRoot is Window parentWindow)
+            {
+                await addGoalWindow.ShowDialog(parentWindow);
+
+                // Обновляем список после закрытия
+                if (DataContext is MainWindowViewModel vm)
+                {
+                    await vm.LoadGoalsAsync();
+                }
+            }
         }
 
-        // Обработчики контекстного меню
-        private void EditGoalMenuItem_Click(object? sender, RoutedEventArgs e)
+        private async void EditGoalMenuItem_Click(object? sender, RoutedEventArgs e)
         {
-            var editGoalWindow = new EditGoalWindow();
-            editGoalWindow.DataContext = new AddEditGoalViewModel(isEditMode: true);
-            editGoalWindow.Show();
+            // Получаем цель, на которую кликнули (из Tag)
+            if (sender is MenuItem menuItem && menuItem.Tag is GoalViewModel selectedGoal)
+            {
+                var editGoalWindow = new EditGoalWindow();
+                // Передаем данные цели во ViewModel окна редактирования
+                // Примечание: нам нужно будет передать реальную модель Goal, а не VM,
+                // поэтому вызываем метод GetGoalModel()
+                editGoalWindow.DataContext = new AddEditGoalViewModel(isEditMode: true, goalToEdit: selectedGoal.GetGoalModel());
+
+                if (VisualRoot is Window parentWindow)
+                {
+                    await editGoalWindow.ShowDialog(parentWindow);
+
+                    // Обновляем список
+                    if (DataContext is MainWindowViewModel vm)
+                    {
+                        await vm.LoadGoalsAsync();
+                    }
+                }
+            }
         }
 
         private async void AddDepositMenuItem_Click(object? sender, RoutedEventArgs e)
         {
-            var depositWindow = new DepositWindow();
-
-            if (VisualRoot is Window parentWindow)
+            if (sender is MenuItem menuItem && menuItem.Tag is GoalViewModel selectedGoal)
             {
-                await depositWindow.ShowDialog(parentWindow);
-            }
-        }
+                var depositWindow = new DepositWindow();
+                // Передаем цель в ViewModel пополнения
+                depositWindow.DataContext = new DepositViewModel(selectedGoal.GetGoalModel());
 
-        private void DeleteGoalMenuItem_Click(object? sender, RoutedEventArgs e)
-        {
-            // Позже добавлю подтверждение удаления
+                if (VisualRoot is Window parentWindow)
+                {
+                    await depositWindow.ShowDialog(parentWindow);
+
+                    // Обновляем список
+                    if (DataContext is MainWindowViewModel vm)
+                    {
+                        await vm.LoadGoalsAsync();
+                    }
+                }
+            }
         }
     }
 }
