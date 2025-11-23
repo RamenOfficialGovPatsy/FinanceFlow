@@ -1,6 +1,8 @@
 using FinanceFlow.Models;
+using Avalonia.Media.Imaging; // Для работы с картинками
 using System;
 using System.ComponentModel;
+using System.IO; // Для проверки существования файла
 using System.Runtime.CompilerServices;
 
 namespace FinanceFlow.ViewModels
@@ -10,8 +12,20 @@ namespace FinanceFlow.ViewModels
         private readonly Goal _goal;
         private decimal _currentAmount;
         private bool _isCompleted;
+        private Bitmap? _goalImage; // Храним загруженную картинку
 
-        // Основные свойства
+        // Конструктор
+        public GoalViewModel(Goal goal)
+        {
+            _goal = goal ?? throw new ArgumentNullException(nameof(goal));
+            _currentAmount = goal.CurrentAmount;
+            _isCompleted = goal.IsCompleted;
+
+            // При создании сразу пробуем загрузить картинку
+            LoadImage();
+        }
+
+        // --- Основные свойства ---
         public int GoalId => _goal.GoalId;
 
         public string Title
@@ -30,13 +44,13 @@ namespace FinanceFlow.ViewModels
 
         public string DisplayTitle => $"{CategoryIcon} {Title}";
 
-        // Категория
+        // --- Категория ---
         public int CategoryId => _goal.CategoryId;
-        public string CategoryName => _goal.GoalCategory?.Name ?? "Без категории".ToUpper();
+        public string CategoryName => _goal.GoalCategory?.Name ?? "БЕЗ КАТЕГОРИИ";
         public string CategoryIcon => _goal.GoalCategory?.Icon ?? "⭐";
         public string CategoryColor => _goal.GoalCategory?.Color ?? "#6B7280";
 
-        // Финансы
+        // --- Финансы ---
         public decimal CurrentAmount
         {
             get => _currentAmount;
@@ -94,7 +108,7 @@ namespace FinanceFlow.ViewModels
             }
         }
 
-        // Даты
+        // --- Даты ---
         public DateTime StartDate
         {
             get => _goal.StartDate;
@@ -107,8 +121,8 @@ namespace FinanceFlow.ViewModels
                     OnPropertyChanged(nameof(DaysPassed));
                     OnPropertyChanged(nameof(TotalDays));
                     OnPropertyChanged(nameof(DaysLeft));
-                    OnPropertyChanged(nameof(DaysLeftText)); // Обновляем текст
-                    OnPropertyChanged(nameof(DaysLeftColor)); // Обновляем цвет
+                    OnPropertyChanged(nameof(DaysLeftText));
+                    OnPropertyChanged(nameof(DaysLeftColor));
                     OnPropertyChanged(nameof(IsOverdue));
                 }
             }
@@ -124,8 +138,8 @@ namespace FinanceFlow.ViewModels
                     _goal.EndDate = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(DaysLeft));
-                    OnPropertyChanged(nameof(DaysLeftText)); // Обновляем текст
-                    OnPropertyChanged(nameof(DaysLeftColor)); // Обновляем цвет
+                    OnPropertyChanged(nameof(DaysLeftText));
+                    OnPropertyChanged(nameof(DaysLeftColor));
                     OnPropertyChanged(nameof(TotalDays));
                     OnPropertyChanged(nameof(IsOverdue));
                     OnPropertyChanged(nameof(TimeProgressPercentage));
@@ -138,7 +152,6 @@ namespace FinanceFlow.ViewModels
         public int DaysLeft => (EndDate - DateTime.Today).Days;
         public bool IsOverdue => DaysLeft < 0 && !IsCompleted;
 
-        // --- НОВЫЕ СВОЙСТВА ДЛЯ ОТОБРАЖЕНИЯ ДНЕЙ ---
         public string DaysLeftText
         {
             get
@@ -146,7 +159,7 @@ namespace FinanceFlow.ViewModels
                 if (EndDate == DateTime.MinValue) return "";
 
                 var today = DateTime.Today;
-                var end = EndDate.Date; // Убираем влияние времени
+                var end = EndDate.Date;
                 var diff = (end - today).Days;
 
                 if (diff < 0) return $"Просрочено ({Math.Abs(diff)} дн.)";
@@ -163,18 +176,17 @@ namespace FinanceFlow.ViewModels
                 var end = EndDate.Date;
                 var diff = (end - today).Days;
 
-                if (diff < 0) return "#EF4444";   // Просрочено (Красный)
-                if (diff <= 7) return "#EF4444";  // Горит (Красный)
-                if (diff <= 30) return "#F59E0B"; // Скоро (Оранжевый)
-                return "#10B981";                 // Не скоро (Зеленый)
+                if (diff < 0) return "#EF4444";
+                if (diff <= 7) return "#EF4444";
+                if (diff <= 30) return "#F59E0B";
+                return "#10B981";
             }
         }
-        // -------------------------------------------
 
         public double TimeProgressPercentage =>
             TotalDays > 0 ? Math.Round((DaysPassed / (double)TotalDays) * 100, 1) : 0;
 
-        // Приоритет
+        // --- Приоритет ---
         public int Priority
         {
             get => _goal.Priority;
@@ -215,7 +227,7 @@ namespace FinanceFlow.ViewModels
             _ => "⚪"
         };
 
-        // Статус
+        // --- Статус ---
         public bool IsCompleted
         {
             get => _isCompleted;
@@ -233,7 +245,7 @@ namespace FinanceFlow.ViewModels
         public string StatusText => IsCompleted ? "Выполнено" : IsOverdue ? "Просрочено" : "В процессе";
         public string StatusColor => IsCompleted ? "#10B981" : IsOverdue ? "#EF4444" : "#F59E0B";
 
-        // Дополнительные свойства
+        // --- Описание (с логикой для UI) ---
         public string Description
         {
             get => _goal.Description ?? string.Empty;
@@ -243,10 +255,16 @@ namespace FinanceFlow.ViewModels
                 {
                     _goal.Description = value;
                     OnPropertyChanged();
+                    // Уведомляем UI, что наличие описания изменилось
+                    OnPropertyChanged(nameof(HasDescription));
                 }
             }
         }
 
+        // Свойство-флаг для UI: есть ли описание?
+        public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
+
+        // --- Изображение (с логикой загрузки) ---
         public string ImagePath
         {
             get => _goal.ImagePath ?? string.Empty;
@@ -256,30 +274,62 @@ namespace FinanceFlow.ViewModels
                 {
                     _goal.ImagePath = value;
                     OnPropertyChanged();
+
+                    // При изменении пути пытаемся перезагрузить картинку
+                    LoadImage();
+                }
+            }
+        }
+
+        // Bitmap для отображения в Image контроле
+        public Bitmap? GoalImage
+        {
+            get => _goalImage;
+            private set
+            {
+                if (SetProperty(ref _goalImage, value))
+                {
                     OnPropertyChanged(nameof(HasImage));
                 }
             }
         }
 
-        public bool HasImage => !string.IsNullOrEmpty(ImagePath);
+        // Свойство-флаг для UI: есть ли картинка?
+        public bool HasImage => GoalImage != null;
+
+        // Метод загрузки картинки с диска
+        private void LoadImage()
+        {
+            try
+            {
+                // Если путь пустой или файл не существует - сбрасываем картинку
+                if (string.IsNullOrEmpty(_goal.ImagePath) || !File.Exists(_goal.ImagePath))
+                {
+                    GoalImage = null;
+                    return;
+                }
+
+                // Загружаем картинку
+                // Используем FileStream, чтобы не блокировать файл, если вдруг захотим его удалить
+                using (var stream = File.OpenRead(_goal.ImagePath))
+                {
+                    GoalImage = new Bitmap(stream);
+                }
+            }
+            catch (Exception)
+            {
+                // Если файл битый или ошибка доступа - просто не показываем картинку
+                GoalImage = null;
+            }
+        }
 
         public DateTime CreatedAt => _goal.CreatedAt;
 
-        // Конструктор
-        public GoalViewModel(Goal goal)
-        {
-            _goal = goal ?? throw new ArgumentNullException(nameof(goal));
-            _currentAmount = goal.CurrentAmount;
-            _isCompleted = goal.IsCompleted;
-        }
-
-        // Бизнес-методы
+        // --- Бизнес-методы ---
         public void AddDeposit(decimal amount)
         {
             if (amount <= 0) return;
-
             CurrentAmount += amount;
-
             if (CurrentAmount >= TargetAmount)
             {
                 CurrentAmount = TargetAmount;
@@ -290,9 +340,7 @@ namespace FinanceFlow.ViewModels
         public void WithdrawDeposit(decimal amount)
         {
             if (amount <= 0 || amount > CurrentAmount) return;
-
             CurrentAmount -= amount;
-
             if (IsCompleted && CurrentAmount < TargetAmount)
             {
                 IsCompleted = false;
@@ -320,22 +368,14 @@ namespace FinanceFlow.ViewModels
             IsCompleted = false;
         }
 
-        // Валидация
         public (bool isValid, string errorMessage) Validate()
         {
-            if (string.IsNullOrWhiteSpace(Title))
-                return (false, "Название цели не может быть пустым");
-
-            if (TargetAmount <= 0)
-                return (false, "Целевая сумма должна быть больше 0");
-
-            if (Priority < 1 || Priority > 3)
-                return (false, "Приоритет должен быть в диапазоне от 1 до 3");
-
+            if (string.IsNullOrWhiteSpace(Title)) return (false, "Название цели не может быть пустым");
+            if (TargetAmount <= 0) return (false, "Целевая сумма должна быть больше 0");
+            if (Priority < 1 || Priority > 3) return (false, "Приоритет должен быть в диапазоне от 1 до 3");
             return (true, string.Empty);
         }
 
-        // Получение исходной модели
         public Goal GetGoalModel() => _goal;
 
         private void UpdateCompletionStatus()

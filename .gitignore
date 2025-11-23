@@ -28,3 +28,6 @@ Thumbs.db
 
 # Локальные файлы PostgreSQL (если используются)
 *.pgpass
+
+PicForGoals/
+Assets/
