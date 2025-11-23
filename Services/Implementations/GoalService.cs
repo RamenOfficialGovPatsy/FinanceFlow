@@ -3,12 +3,10 @@ using FinanceFlow.Models;
 using FinanceFlow.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System; // Добавлено для Console
 
 namespace FinanceFlow.Services.Implementations
 {
-    /// <summary>
-    /// Реализация сервиса для управления целями
-    /// </summary>
     public class GoalService : IGoalService
     {
         private readonly AppDbContext _context;
@@ -20,16 +18,31 @@ namespace FinanceFlow.Services.Implementations
             _logger = logger;
         }
 
-        /// <inheritdoc/>
         public async Task<List<Goal>> GetAllGoalsAsync()
         {
             try
             {
-                return await _context.Goals
+                bool isEnabled = AppContext.TryGetSwitch("Npgsql.EnableLegacyTimestampBehavior", out bool enabled) && enabled;
+                Console.WriteLine($"=== SWITCH STATUS: {isEnabled} ==="); // Должно быть TRUE
+
+                var goals = await _context.Goals
                     .Include(g => g.GoalCategory)
                     .Include(g => g.Deposits)
                     .OrderByDescending(g => g.CreatedAt)
                     .ToListAsync();
+
+                // === ДИАГНОСТИКА (УБРАТЬ ПОТОМ) ===
+                Console.WriteLine("=== ДИАГНОСТИКА ДАТ ИЗ БАЗЫ ===");
+                foreach (var goal in goals)
+                {
+                    Console.WriteLine($"{goal.Title}:");
+                    Console.WriteLine($"  StartDate: {goal.StartDate} (Kind: {goal.StartDate.Kind})");
+                    Console.WriteLine($"  EndDate: {goal.EndDate} (Kind: {goal.EndDate.Kind})");
+                }
+                Console.WriteLine("===============================");
+                // ===================================
+
+                return goals;
             }
             catch (Exception ex)
             {
@@ -38,11 +51,11 @@ namespace FinanceFlow.Services.Implementations
             }
         }
 
-        /// <inheritdoc/>
         public async Task<Goal?> GetGoalByIdAsync(int goalId)
         {
             try
             {
+                // ЧИСТЫЙ МЕТОД (Убрали костыли с MinValue)
                 return await _context.Goals
                     .Include(g => g.GoalCategory)
                     .Include(g => g.Deposits)
@@ -55,149 +68,104 @@ namespace FinanceFlow.Services.Implementations
             }
         }
 
-        /// <inheritdoc/>
         public async Task<(bool success, string message)> AddGoalAsync(Goal goal)
         {
             try
             {
-                // Валидация бизнес-правил
                 var validationResult = ValidateGoal(goal);
-                if (!validationResult.success)
-                    return validationResult;
+                if (!validationResult.success) return validationResult;
 
-                // Проверка существования категории
-                var categoryExists = await _context.GoalCategories
-                    .AnyAsync(c => c.CategoryId == goal.CategoryId);
+                var categoryExists = await _context.GoalCategories.AnyAsync(c => c.CategoryId == goal.CategoryId);
+                if (!categoryExists) return (false, "Категория не существует");
 
-                if (!categoryExists)
-                    return (false, "Указанная категория не существует");
+                // Упрощенная нормализация (оставляем только Unspecified для надежности)
+                goal.StartDate = DateTime.SpecifyKind(goal.StartDate, DateTimeKind.Unspecified);
+                goal.EndDate = DateTime.SpecifyKind(goal.EndDate, DateTimeKind.Unspecified);
+                goal.CreatedAt = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Unspecified);
 
-                goal.CreatedAt = DateTime.UtcNow;
                 _context.Goals.Add(goal);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Создана новая цель: {GoalTitle}", goal.Title);
+                _logger.LogInformation("Создана цель: {GoalTitle}", goal.Title);
                 return (true, "Цель успешно создана");
-            }
-            catch (DbUpdateException dbEx)
-            {
-                _logger.LogError(dbEx, "Ошибка базы данных при создании цели");
-                return (false, "Ошибка сохранения в базу данных");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Неожиданная ошибка при создании цели");
-                return (false, "Произошла непредвиденная ошибка");
+                _logger.LogError(ex, "Ошибка при создании цели");
+                return (false, "Ошибка сохранения");
             }
         }
 
-        /// <inheritdoc/>
         public async Task<(bool success, string message)> UpdateGoalAsync(Goal goal)
         {
             try
             {
-                var existingGoal = await _context.Goals
-                    .FirstOrDefaultAsync(g => g.GoalId == goal.GoalId);
+                var existingGoal = await _context.Goals.FirstOrDefaultAsync(g => g.GoalId == goal.GoalId);
+                if (existingGoal == null) return (false, "Цель не найдена");
 
-                if (existingGoal == null)
-                    return (false, "Цель не найдена");
-
-                // Валидация бизнес-правил
                 var validationResult = ValidateGoal(goal);
-                if (!validationResult.success)
-                    return validationResult;
+                if (!validationResult.success) return validationResult;
 
-                // Обновление полей
                 existingGoal.Title = goal.Title;
                 existingGoal.TargetAmount = goal.TargetAmount;
-                existingGoal.StartDate = goal.StartDate;
-                existingGoal.EndDate = goal.EndDate;
+                existingGoal.CurrentAmount = goal.CurrentAmount; // Обновляем и текущую сумму если надо
+
+                // Нормализация
+                existingGoal.StartDate = DateTime.SpecifyKind(goal.StartDate, DateTimeKind.Unspecified);
+                existingGoal.EndDate = DateTime.SpecifyKind(goal.EndDate, DateTimeKind.Unspecified);
+
                 existingGoal.Description = goal.Description;
                 existingGoal.Priority = goal.Priority;
                 existingGoal.CategoryId = goal.CategoryId;
+                existingGoal.ImagePath = goal.ImagePath;
 
                 await _context.SaveChangesAsync();
-
-                _logger.LogInformation("Обновлена цель: {GoalId}", goal.GoalId);
-                return (true, "Цель успешно обновлена");
-            }
-            catch (DbUpdateException dbEx)
-            {
-                _logger.LogError(dbEx, "Ошибка базы данных при обновлении цели {GoalId}", goal.GoalId);
-                return (false, "Ошибка обновления в базе данных");
+                return (true, "Цель обновлена");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Неожиданная ошибка при обновлении цели {GoalId}", goal.GoalId);
-                return (false, "Произошла непредвиденная ошибка");
+                _logger.LogError(ex, "Ошибка при обновлении цели");
+                return (false, "Ошибка обновления");
             }
         }
 
-        /// <inheritdoc/>
         public async Task<(bool success, string message)> DeleteGoalAsync(int goalId)
         {
             try
             {
-                var goal = await _context.Goals
-                    .FirstOrDefaultAsync(g => g.GoalId == goalId);
-
-                if (goal == null)
-                    return (false, "Цель не найдена");
+                var goal = await _context.Goals.FirstOrDefaultAsync(g => g.GoalId == goalId);
+                if (goal == null) return (false, "Цель не найдена");
 
                 _context.Goals.Remove(goal);
                 await _context.SaveChangesAsync();
-
-                _logger.LogInformation("Удалена цель: {GoalId}", goalId);
-                return (true, "Цель успешно удалена");
-            }
-            catch (DbUpdateException dbEx)
-            {
-                _logger.LogError(dbEx, "Ошибка базы данных при удалении цели {GoalId}", goalId);
-                return (false, "Ошибка удаления из базы данных");
+                return (true, "Цель удалена");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Неожиданная ошибка при удалении цели {GoalId}", goalId);
-                return (false, "Произошла непредвиденная ошибка");
+                _logger.LogError(ex, "Ошибка удаления цели");
+                return (false, "Ошибка удаления");
             }
         }
 
-        /// <inheritdoc/>
+        public async Task<List<GoalCategory>> GetCategoriesAsync()
+        {
+            return await _context.GoalCategories.OrderBy(c => c.SortOrder).ToListAsync();
+        }
+
         public async Task<List<Goal>> GetGoalsByCategoryAsync(int categoryId)
         {
-            try
-            {
-                return await _context.Goals
-                    .Include(g => g.GoalCategory)
-                    .Include(g => g.Deposits)
-                    .Where(g => g.CategoryId == categoryId)
-                    .OrderByDescending(g => g.CreatedAt)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка при получении целей по категории {CategoryId}", categoryId);
-                return new List<Goal>();
-            }
+            return await _context.Goals
+                .Include(g => g.GoalCategory)
+                .Where(g => g.CategoryId == categoryId)
+                .ToListAsync();
         }
 
-        /// <summary>
-        /// Валидация бизнес-правил для цели
-        /// </summary>
         private (bool success, string message) ValidateGoal(Goal goal)
         {
-            if (string.IsNullOrWhiteSpace(goal.Title))
-                return (false, "Название цели не может быть пустым");
-
-            if (goal.TargetAmount <= 0)
-                return (false, "Целевая сумма должна быть больше 0");
-
-            if (goal.EndDate <= goal.StartDate)
-                return (false, "Дата окончания должна быть позже даты начала");
-
-            if (goal.Priority < 1 || goal.Priority > 3)
-                return (false, "Приоритет должен быть в диапазоне от 1 до 3");
-
+            if (string.IsNullOrWhiteSpace(goal.Title)) return (false, "Название не может быть пустым");
+            if (goal.TargetAmount <= 0) return (false, "Целевая сумма должна быть > 0");
+            // Проверку дат убрали из БД, но здесь можно оставить логическую
+            if (goal.EndDate <= goal.StartDate) return (false, "Дата окончания должна быть позже даты начала");
             return (true, string.Empty);
         }
     }

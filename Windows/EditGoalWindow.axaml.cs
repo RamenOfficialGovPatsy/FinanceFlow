@@ -10,7 +10,15 @@ namespace FinanceFlow.Windows
         public EditGoalWindow()
         {
             InitializeComponent();
-            DataContext = new AddEditGoalViewModel(isEditMode: true); // Режим редактирования
+
+            this.DataContextChanged += (s, e) =>
+            {
+                if (DataContext is AddEditGoalViewModel vm)
+                {
+                    vm.RequestClose += () => this.Close();
+                }
+            };
+            //  DataContext = new AddEditGoalViewModel(isEditMode: true); // Режим редактирования
         }
 
         private void InitializeComponent()
@@ -19,15 +27,19 @@ namespace FinanceFlow.Windows
         }
 
         // Обработчик кнопки "Отмена"
+        /*
         private void CancelButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
             this.Close();
         }
+        */
 
         // Обработчик кнопки "Сохранить" 
+        /*
         private void SaveButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
             this.Close();
         }
+        */
     }
 }

@@ -108,8 +108,8 @@
                                         <Run Text="Осталось:"/>
                                         <Run Text="{Binding RemainingAmount, StringFormat='{}{0:N0} ₽'}" FontWeight="SemiBold"/>
                                         <Run Text=" • "/>
-                                        <Run Text="{Binding EndDate, Converter={StaticResource DateToDaysConverter}}" 
-                                             Foreground="{Binding EndDate, Converter={StaticResource DateToDaysConverter}, ConverterParameter=Color}"/>
+                                        <Run Text="{Binding DaysLeftText}"
+                                             Foreground="{Binding DaysLeftColor}"/>
                                     </TextBlock>
                                     
                                     <StackPanel Orientation="Horizontal" Spacing="6">

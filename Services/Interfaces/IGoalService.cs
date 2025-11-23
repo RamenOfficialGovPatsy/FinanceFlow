@@ -10,5 +10,6 @@ namespace FinanceFlow.Services.Interfaces
         Task<(bool success, string message)> UpdateGoalAsync(Goal goal);
         Task<(bool success, string message)> DeleteGoalAsync(int goalId);
         Task<List<Goal>> GetGoalsByCategoryAsync(int categoryId);
+        Task<List<GoalCategory>> GetCategoriesAsync();
     }
 }

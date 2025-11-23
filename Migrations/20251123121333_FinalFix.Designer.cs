@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinanceFlow.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251116133913_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251123121333_FinalFix")]
+    partial class FinalFix
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -43,11 +43,11 @@ namespace FinanceFlow.Migrations
 
                     b.Property<DateTime>("GeneratedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("timestamp without time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<DateTime>("ReportDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("ReportType")
                         .IsRequired()
@@ -92,7 +92,7 @@ namespace FinanceFlow.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("timestamp without time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<decimal>("CurrentAmount")
@@ -105,7 +105,7 @@ namespace FinanceFlow.Migrations
                         .HasColumnType("character varying(500)");
 
                     b.Property<DateTime>("EndDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("ImagePath")
                         .HasMaxLength(255)
@@ -119,8 +119,8 @@ namespace FinanceFlow.Migrations
 
                     b.Property<DateTime>("StartDate")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_DATE");
+                        .HasColumnType("timestamp without time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<decimal>("TargetAmount")
                         .HasColumnType("decimal(15,2)");
@@ -139,8 +139,6 @@ namespace FinanceFlow.Migrations
                             t.HasCheckConstraint("CK_Goals_Amounts", "\"CurrentAmount\" <= \"TargetAmount\"");
 
                             t.HasCheckConstraint("CK_Goals_CurrentAmount", "\"CurrentAmount\" >= 0");
-
-                            t.HasCheckConstraint("CK_Goals_Dates", "\"EndDate\" > \"StartDate\"");
 
                             t.HasCheckConstraint("CK_Goals_Priority", "\"Priority\" IN (1, 2, 3)");
 
@@ -163,7 +161,7 @@ namespace FinanceFlow.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("timestamp without time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Icon")
@@ -185,88 +183,6 @@ namespace FinanceFlow.Migrations
                     b.HasKey("CategoryId");
 
                     b.ToTable("GoalCategories", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            CategoryId = 1,
-                            Color = "#8B5CF6",
-                            CreatedAt = new DateTime(2025, 11, 16, 13, 39, 12, 845, DateTimeKind.Utc).AddTicks(3362),
-                            Icon = "📱",
-                            IsActive = true,
-                            Name = "Техника",
-                            SortOrder = 1
-                        },
-                        new
-                        {
-                            CategoryId = 2,
-                            Color = "#EF4444",
-                            CreatedAt = new DateTime(2025, 11, 16, 13, 39, 12, 845, DateTimeKind.Utc).AddTicks(3364),
-                            Icon = "🚗",
-                            IsActive = true,
-                            Name = "Авто",
-                            SortOrder = 2
-                        },
-                        new
-                        {
-                            CategoryId = 3,
-                            Color = "#10B981",
-                            CreatedAt = new DateTime(2025, 11, 16, 13, 39, 12, 845, DateTimeKind.Utc).AddTicks(3365),
-                            Icon = "✈️",
-                            IsActive = true,
-                            Name = "Путешествия",
-                            SortOrder = 3
-                        },
-                        new
-                        {
-                            CategoryId = 4,
-                            Color = "#F59E0B",
-                            CreatedAt = new DateTime(2025, 11, 16, 13, 39, 12, 845, DateTimeKind.Utc).AddTicks(3366),
-                            Icon = "🏠",
-                            IsActive = true,
-                            Name = "Недвижимость",
-                            SortOrder = 4
-                        },
-                        new
-                        {
-                            CategoryId = 5,
-                            Color = "#3B82F6",
-                            CreatedAt = new DateTime(2025, 11, 16, 13, 39, 12, 845, DateTimeKind.Utc).AddTicks(3367),
-                            Icon = "🎓",
-                            IsActive = true,
-                            Name = "Образование",
-                            SortOrder = 5
-                        },
-                        new
-                        {
-                            CategoryId = 6,
-                            Color = "#EC4899",
-                            CreatedAt = new DateTime(2025, 11, 16, 13, 39, 12, 845, DateTimeKind.Utc).AddTicks(3369),
-                            Icon = "🏥",
-                            IsActive = true,
-                            Name = "Здоровье",
-                            SortOrder = 6
-                        },
-                        new
-                        {
-                            CategoryId = 7,
-                            Color = "#8B5CF6",
-                            CreatedAt = new DateTime(2025, 11, 16, 13, 39, 12, 845, DateTimeKind.Utc).AddTicks(3370),
-                            Icon = "🎮",
-                            IsActive = true,
-                            Name = "Развлечения",
-                            SortOrder = 7
-                        },
-                        new
-                        {
-                            CategoryId = 8,
-                            Color = "#6B7280",
-                            CreatedAt = new DateTime(2025, 11, 16, 13, 39, 12, 845, DateTimeKind.Utc).AddTicks(3371),
-                            Icon = "⭐",
-                            IsActive = true,
-                            Name = "Другое",
-                            SortOrder = 8
-                        });
                 });
 
             modelBuilder.Entity("FinanceFlow.Models.GoalDeposit", b =>
@@ -286,7 +202,7 @@ namespace FinanceFlow.Migrations
 
                     b.Property<DateTime>("DepositDate")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("timestamp without time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("DepositType")

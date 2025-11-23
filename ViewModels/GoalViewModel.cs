@@ -1,4 +1,7 @@
 using FinanceFlow.Models;
+using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace FinanceFlow.ViewModels
 {
@@ -74,7 +77,7 @@ namespace FinanceFlow.ViewModels
             TargetAmount > 0 ? Math.Round((CurrentAmount / TargetAmount) * 100, 1) : 0;
 
         public double ProgressWidth =>
-            Math.Min((double)ProgressPercentage, 100) * 3.0; // Для ProgressBar шириной 300px
+            Math.Min((double)ProgressPercentage, 100) * 3.0;
 
         public string ProgressColor
         {
@@ -82,11 +85,11 @@ namespace FinanceFlow.ViewModels
             {
                 return ProgressPercentage switch
                 {
-                    >= 100 => "#10B981", // Выполнено - зеленый
-                    >= 75 => "#10B981",  // Близко к завершению - зеленый
-                    >= 50 => "#F59E0B",  // На полпути - оранжевый
-                    >= 25 => "#F59E0B",  // Начальный прогресс - оранжевый
-                    _ => "#EF4444"       // Только начато - красный
+                    >= 100 => "#10B981",
+                    >= 75 => "#10B981",
+                    >= 50 => "#F59E0B",
+                    >= 25 => "#F59E0B",
+                    _ => "#EF4444"
                 };
             }
         }
@@ -104,6 +107,8 @@ namespace FinanceFlow.ViewModels
                     OnPropertyChanged(nameof(DaysPassed));
                     OnPropertyChanged(nameof(TotalDays));
                     OnPropertyChanged(nameof(DaysLeft));
+                    OnPropertyChanged(nameof(DaysLeftText)); // Обновляем текст
+                    OnPropertyChanged(nameof(DaysLeftColor)); // Обновляем цвет
                     OnPropertyChanged(nameof(IsOverdue));
                 }
             }
@@ -119,6 +124,8 @@ namespace FinanceFlow.ViewModels
                     _goal.EndDate = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(DaysLeft));
+                    OnPropertyChanged(nameof(DaysLeftText)); // Обновляем текст
+                    OnPropertyChanged(nameof(DaysLeftColor)); // Обновляем цвет
                     OnPropertyChanged(nameof(TotalDays));
                     OnPropertyChanged(nameof(IsOverdue));
                     OnPropertyChanged(nameof(TimeProgressPercentage));
@@ -130,6 +137,39 @@ namespace FinanceFlow.ViewModels
         public int TotalDays => (EndDate - StartDate).Days;
         public int DaysLeft => (EndDate - DateTime.Today).Days;
         public bool IsOverdue => DaysLeft < 0 && !IsCompleted;
+
+        // --- НОВЫЕ СВОЙСТВА ДЛЯ ОТОБРАЖЕНИЯ ДНЕЙ ---
+        public string DaysLeftText
+        {
+            get
+            {
+                if (EndDate == DateTime.MinValue) return "";
+
+                var today = DateTime.Today;
+                var end = EndDate.Date; // Убираем влияние времени
+                var diff = (end - today).Days;
+
+                if (diff < 0) return $"Просрочено ({Math.Abs(diff)} дн.)";
+                if (diff == 0) return "Сегодня";
+                return $"{diff} дней";
+            }
+        }
+
+        public string DaysLeftColor
+        {
+            get
+            {
+                var today = DateTime.Today;
+                var end = EndDate.Date;
+                var diff = (end - today).Days;
+
+                if (diff < 0) return "#EF4444";   // Просрочено (Красный)
+                if (diff <= 7) return "#EF4444";  // Горит (Красный)
+                if (diff <= 30) return "#F59E0B"; // Скоро (Оранжевый)
+                return "#10B981";                 // Не скоро (Зеленый)
+            }
+        }
+        // -------------------------------------------
 
         public double TimeProgressPercentage =>
             TotalDays > 0 ? Math.Round((DaysPassed / (double)TotalDays) * 100, 1) : 0;
@@ -153,10 +193,10 @@ namespace FinanceFlow.ViewModels
 
         public string PriorityColor => Priority switch
         {
-            1 => "#EF4444", // Высокий - красный
-            2 => "#F59E0B", // Средний - оранжевый  
-            3 => "#10B981", // Низкий - зеленый
-            _ => "#6B7280"  // По умолчанию - серый
+            1 => "#EF4444",
+            2 => "#F59E0B",
+            3 => "#10B981",
+            _ => "#6B7280"
         };
 
         public string PriorityName => Priority switch
@@ -240,10 +280,9 @@ namespace FinanceFlow.ViewModels
 
             CurrentAmount += amount;
 
-            // Автоматически отмечаем как выполненную при достижении цели
             if (CurrentAmount >= TargetAmount)
             {
-                CurrentAmount = TargetAmount; // Не даем превысить цель
+                CurrentAmount = TargetAmount;
                 IsCompleted = true;
             }
         }
@@ -254,7 +293,6 @@ namespace FinanceFlow.ViewModels
 
             CurrentAmount -= amount;
 
-            // Снимаем статус выполнения если сумма ушла ниже цели
             if (IsCompleted && CurrentAmount < TargetAmount)
             {
                 IsCompleted = false;
@@ -274,7 +312,7 @@ namespace FinanceFlow.ViewModels
         public void MarkAsCompleted()
         {
             IsCompleted = true;
-            CurrentAmount = TargetAmount; // Гарантируем 100% прогресс
+            CurrentAmount = TargetAmount;
         }
 
         public void MarkAsIncomplete()
@@ -291,16 +329,13 @@ namespace FinanceFlow.ViewModels
             if (TargetAmount <= 0)
                 return (false, "Целевая сумма должна быть больше 0");
 
-            if (EndDate <= StartDate)
-                return (false, "Дата окончания должна быть позже даты начала");
-
             if (Priority < 1 || Priority > 3)
                 return (false, "Приоритет должен быть в диапазоне от 1 до 3");
 
             return (true, string.Empty);
         }
 
-        // Получение исходной модели (для сохранения в БД)
+        // Получение исходной модели
         public Goal GetGoalModel() => _goal;
 
         private void UpdateCompletionStatus()

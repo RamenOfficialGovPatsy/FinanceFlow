@@ -2,8 +2,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:FinanceFlow.ViewModels"
+             xmlns:models="using:FinanceFlow.Models"
              mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="900"
              x:Class="FinanceFlow.Views.AddEditGoalView"
+             x:DataType="vm:AddEditGoalViewModel"
              FontFamily="{StaticResource ManropeFont}">
 
     <UserControl.Styles>
@@ -22,82 +25,63 @@
         </Style>
     </UserControl.Styles>
 
-    <!-- ИЗМЕНЕНО: 3 строки (Заголовок, Контент, Футер) -->
     <Grid RowDefinitions="Auto, *, Auto" Margin="24,24,24,20">
         
-        <!-- 1. Заголовок (Row 0) -->
         <Grid Grid.Row="0" Margin="0,0,0,24">
-            <TextBlock Text="Новая цель" 
-                       FontSize="24" 
-                       FontWeight="Bold" 
-                       Foreground="{StaticResource AppText}"/>
+            <TextBlock Text="{Binding WindowTitle}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource AppText}"/>
         </Grid>
 
-        <!-- 2. Контент с прокруткой (Row 1) -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,10,0">
             <StackPanel Spacing="20">
                 
                 <StackPanel Spacing="8">
                     <TextBlock Classes="Label" Text="Название цели"/>
-                    <TextBox Text="Накопить на iPhone 15" 
-                             Watermark="Введите название..."
-                             Classes="form-input"/>
+                    <TextBox Text="{Binding Title, Mode=TwoWay}" Watermark="Введите название..." Classes="form-input"/>
                 </StackPanel>
 
                 <StackPanel Spacing="8">
                     <TextBlock Classes="Label" Text="Категория"/>
-                    <ComboBox SelectedIndex="0" 
+                    <ComboBox ItemsSource="{Binding Categories}"
+                              SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
                               HorizontalAlignment="Stretch" 
                               HorizontalContentAlignment="Left"
                               PlaceholderText="Выберите категорию">
-                        <ComboBoxItem HorizontalContentAlignment="Left">
-                            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                <Border Width="16" Height="16" CornerRadius="4" Background="#8B5CF6"/>
-                                <TextBlock Text="📱" FontSize="16" VerticalAlignment="Center" Margin="0,0,4,0" FontFamily="Segoe UI Emoji, Apple Color Emoji, System"/>
-                                <TextBlock Text="Техника" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </ComboBoxItem>
-                        <ComboBoxItem HorizontalContentAlignment="Left">
-                            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                <Border Width="16" Height="16" CornerRadius="4" Background="#EF4444"/>
-                                <TextBlock Text="🚗" FontSize="16" VerticalAlignment="Center" Margin="0,0,4,0" FontFamily="Segoe UI Emoji, Apple Color Emoji, System"/>
-                                <TextBlock Text="Транспорт" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </ComboBoxItem>
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate DataType="models:GoalCategory">
+                                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                    <Border Width="24" Height="24" CornerRadius="6" Background="#2D3748">
+                                        <TextBlock Text="{Binding Icon}" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   FontFamily="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, System"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
                     </ComboBox>
                 </StackPanel>
 
                 <StackPanel Spacing="8">
                     <TextBlock Classes="Label" Text="Приоритет"/>
-                    <ComboBox SelectedIndex="0" 
+                    <ComboBox ItemsSource="{Binding Priorities}"
+                              SelectedItem="{Binding SelectedPriority, Mode=TwoWay}"
                               HorizontalAlignment="Stretch" 
                               HorizontalContentAlignment="Left"
                               PlaceholderText="Выберите приоритет">
-                        <ComboBoxItem HorizontalContentAlignment="Left">
-                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                <Ellipse Width="12" Height="12" Fill="#F59E0B"/>
-                                <TextBlock Text="Средний" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </ComboBoxItem>
-                        <ComboBoxItem HorizontalContentAlignment="Left">
-                             <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                <Ellipse Width="12" Height="12" Fill="#EF4444"/>
-                                <TextBlock Text="Высокий" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </ComboBoxItem>
-                        <ComboBoxItem HorizontalContentAlignment="Left">
-                             <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                <Ellipse Width="12" Height="12" Fill="#10B981"/>
-                                <TextBlock Text="Низкий" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </ComboBoxItem>
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate DataType="vm:PriorityItem">
+                                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                    <Ellipse Width="12" Height="12" Fill="{Binding Color}"/>
+                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
                     </ComboBox>
                 </StackPanel>
 
                 <StackPanel Spacing="8">
                     <TextBlock Classes="Label" Text="Целевая сумма"/>
                     <Grid ColumnDefinitions="*, Auto">
-                        <NumericUpDown Value="120000" FormatString="N0" Minimum="0" ParsingNumberStyle="Integer" HorizontalAlignment="Stretch"/>
+                        <NumericUpDown Value="{Binding TargetAmount, Mode=TwoWay}" FormatString="N0" Minimum="0" ParsingNumberStyle="Integer" HorizontalAlignment="Stretch"/>
                         <TextBlock Grid.Column="1" Text="₽" FontSize="16" VerticalAlignment="Center" Margin="12,0,0,0" Foreground="{StaticResource AppTextSecondary}"/>
                     </Grid>
                 </StackPanel>
@@ -105,7 +89,7 @@
                 <StackPanel Spacing="8">
                     <TextBlock Classes="Label" Text="Текущая сумма"/>
                     <Grid ColumnDefinitions="*, Auto">
-                        <NumericUpDown Value="45000" FormatString="N0" Minimum="0" ParsingNumberStyle="Integer" HorizontalAlignment="Stretch"/>
+                        <NumericUpDown Value="{Binding CurrentAmount, Mode=TwoWay}" FormatString="N0" Minimum="0" ParsingNumberStyle="Integer" HorizontalAlignment="Stretch"/>
                         <TextBlock Grid.Column="1" Text="₽" FontSize="16" VerticalAlignment="Center" Margin="12,0,0,0" Foreground="{StaticResource AppTextSecondary}"/>
                     </Grid>
                 </StackPanel>
@@ -113,130 +97,79 @@
                 <StackPanel Spacing="8">
                     <TextBlock Classes="Label" Text="Дата начала"/>
                     <Grid ColumnDefinitions="Auto, 16, *">
-                        <TextBlock Grid.Column="0" Text="📅" FontSize="28" VerticalAlignment="Center" FontFamily="Segoe UI Emoji, Apple Color Emoji, System"/>
-                        <CalendarDatePicker Grid.Column="2" SelectedDate="2023-11-01" SelectedDateFormat="Custom" CustomDateFormatString="MM / dd / yyyy" Watermark="MM / dd / yyyy" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"/>
+                        <TextBlock Grid.Column="0" Text="📅" FontSize="28" VerticalAlignment="Center" FontFamily="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, System"/>
+                        <CalendarDatePicker Grid.Column="2" SelectedDate="{Binding StartDate, Mode=TwoWay}" 
+                                            SelectedDateFormat="Custom" CustomDateFormatString="dd.MM.yyyy" 
+                                            Watermark="ДД.ММ.ГГГГ" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"/>
                     </Grid>
                 </StackPanel>
 
                 <StackPanel Spacing="8">
                     <TextBlock Classes="Label" Text="Дата окончания"/>
                     <Grid ColumnDefinitions="Auto, 16, *">
-                        <TextBlock Grid.Column="0" Text="📅" FontSize="28" VerticalAlignment="Center" FontFamily="Segoe UI Emoji, Apple Color Emoji, System"/>
-                        <CalendarDatePicker Grid.Column="2" SelectedDate="2024-02-15" SelectedDateFormat="Custom" CustomDateFormatString="MM / dd / yyyy" Watermark="MM / dd / yyyy" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"/>
+                        <TextBlock Grid.Column="0" Text="📅" FontSize="28" VerticalAlignment="Center" FontFamily="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, System"/>
+                        <CalendarDatePicker Grid.Column="2" SelectedDate="{Binding EndDate, Mode=TwoWay}"
+                                            SelectedDateFormat="Custom" CustomDateFormatString="dd.MM.yyyy" 
+                                            Watermark="ДД.ММ.ГГГГ" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"/>
                     </Grid>
                 </StackPanel>
 
                 <StackPanel Spacing="8">
                     <TextBlock Classes="Label" Text="Описание"/>
-                    <TextBox Text="Накоплю на новый айфон для работы и учебы. Хочу 256 ГБ версию." Watermark="Добавьте описание..." Height="120" AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"/>
+                    <TextBox Text="{Binding Description, Mode=TwoWay}" Watermark="Добавьте описание..." Height="120" AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"/>
                 </StackPanel>
 
                 <StackPanel Spacing="8">
                     <TextBlock Classes="Label" Text="Изображение цели"/>
                     <StackPanel Orientation="Horizontal" Spacing="12">
-                        <Button Height="40" Background="{StaticResource AppCardBackground}" BorderThickness="0" CornerRadius="6" Padding="20, 0"> 
+                        <Button Height="40" Background="{StaticResource AppCardBackground}" BorderThickness="0" CornerRadius="6" Padding="20, 0"
+                                Click="LoadImageButton_Click"> 
                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                <TextBlock Text="📎" Foreground="#8B5CF6" FontSize="18" VerticalAlignment="Center" FontFamily="Segoe UI Emoji, Apple Color Emoji, System"/>
+                                <TextBlock Text="📎" Foreground="#8B5CF6" FontSize="18" VerticalAlignment="Center" FontFamily="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, System"/>
                                 <TextBlock Text="Загрузить изображение" Foreground="{StaticResource AppTextSecondary}" FontWeight="Normal" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <Button Height="40" Background="{StaticResource AppCardBackground}" BorderThickness="0" CornerRadius="6" Padding="20, 0">
+                        <Button Height="40" Background="{StaticResource AppCardBackground}" BorderThickness="0" CornerRadius="6" Padding="20, 0"
+                                Command="{Binding DeleteImageCommand}">
                              <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                <TextBlock Text="🗑️" FontSize="16" VerticalAlignment="Center" FontFamily="Segoe UI Emoji, Apple Color Emoji, System"/>
-                                <TextBlock Text="Удалить" Foreground="#EF4444" FontWeight="Normal" VerticalAlignment="Center"/>
+                                <TextBlock Text="🗑️" FontSize="16" VerticalAlignment="Center" FontFamily="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, System"/>
+                                <TextBlock Text="Удалить изображение" Foreground="#EF4444" FontWeight="Normal" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>
                 </StackPanel>
 
-                <Border Height="200" 
-                        CornerRadius="8" 
-                        BorderBrush="{StaticResource AppBorderBrush}" 
-                        BorderThickness="1"
-                        Background="{StaticResource AppCardBackground}">
-                    
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
-                        <TextBlock Text="🖼️" 
-                                   FontSize="48" 
-                                   HorizontalAlignment="Center" 
-                                   Opacity="0.3"
-                                   FontFamily="Segoe UI Emoji, Apple Color Emoji, System"/>
+                <Border Height="200" CornerRadius="8" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" Background="{StaticResource AppCardBackground}" ClipToBounds="True">
+                    <Panel>
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12"
+                                    IsVisible="{Binding !HasImage}">
+                            <TextBlock Text="🖼️" FontSize="48" HorizontalAlignment="Center" Opacity="0.3" FontFamily="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, System"/>
+                            <TextBlock Text="ПРЕВЬЮ ИЗОБРАЖЕНИЯ" Foreground="{StaticResource AppTextSecondary}" FontSize="14" FontWeight="Bold" LetterSpacing="1" HorizontalAlignment="Center" Opacity="0.5"/>
+                        </StackPanel>
                         
-                        <TextBlock Text="ПРЕВЬЮ ИЗОБРАЖЕНИЯ" 
-                                   Foreground="{StaticResource AppTextSecondary}" 
-                                   FontSize="14"
-                                   FontWeight="Bold"
-                                   LetterSpacing="1"
-                                   HorizontalAlignment="Center"
-                                   Opacity="0.5"/>
-                    </StackPanel>
+                        <Image Source="{Binding GoalImage}" 
+                               IsVisible="{Binding HasImage}"
+                               Stretch="UniformToFill"/>
+                    </Panel>
                 </Border>
 
-                <TextBlock Text="JPG, PNG • до 2 МБ" 
-                           Foreground="{StaticResource AppTextSecondary}" 
-                           FontSize="12" 
-                           HorizontalAlignment="Center"
-                           Margin="0, -10, 0, 20"/>
+                <TextBlock Text="JPG, PNG • до 2 МБ" Foreground="{StaticResource AppTextSecondary}" FontSize="12" HorizontalAlignment="Center" Margin="0, -10, 0, 20"/>
 
             </StackPanel>
         </ScrollViewer>
 
-        <!-- 3. Кнопки действий (Row 2 - Прижаты к низу) -->
-        <StackPanel Grid.Row="2"
-                    HorizontalAlignment="Right" 
-                    Orientation="Horizontal" 
-                    Spacing="12"
-                    Margin="0,20,0,0">
-            
-            <!-- Кнопка Отмена -->
-            <!-- ДОБАВЛЕНО: Click="CancelButton_Click" -->
-            <Button Classes="Secondary"
-                    Width="140"
-                    Height="40"
-                    Padding="0"
-                    Click="CancelButton_Click">
-                <StackPanel Orientation="Horizontal" 
-                            Spacing="8" 
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center">
-                    
-                    <Path Data="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"
-                          Fill="#EF4444"
-                          Width="14"
-                          Height="14"
-                          Stretch="Uniform"
-                          VerticalAlignment="Center"/>
-                    
-                    <TextBlock Text="Отмена" 
-                               Foreground="{StaticResource AppTextSecondary}"
-                               VerticalAlignment="Center"
-                               FontSize="14"
-                                       FontWeight="SemiBold"/>
+        <StackPanel Grid.Row="2" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="12" Margin="0,20,0,0">
+            <Button Classes="Secondary" Width="140" Height="40" Padding="0" Command="{Binding CancelCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Path Data="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" Fill="#EF4444" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
+                    <TextBlock Text="Отмена" Foreground="{StaticResource AppTextSecondary}" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
                 </StackPanel>
             </Button>
             
-            <!-- Кнопка Сохранить -->
-            <!-- ДОБАВЛЕНО: Click="SaveButton_Click" -->
-            <Button Classes="Primary"
-                    Width="140"
-                    Height="40"
-                    Padding="0"
-                    Click="SaveButton_Click">
-                <StackPanel Orientation="Horizontal" 
-                            Spacing="8" 
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center">
-                    
-                    <TextBlock Text="✅" 
-                               FontSize="16" 
-                               VerticalAlignment="Center"
-                               FontFamily="Segoe UI Emoji, Apple Color Emoji, System"/>
-                    
-                    <TextBlock Text="Сохранить" 
-                               Foreground="#D1D5DB" 
-                               VerticalAlignment="Center"
-                               FontSize="14"
-                               FontWeight="SemiBold"/>
+            <Button Classes="Primary" Width="140" Height="40" Padding="0" Command="{Binding SaveCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="✅" FontSize="16" VerticalAlignment="Center" FontFamily="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, System"/>
+                    <TextBlock Text="Сохранить" Foreground="#D1D5DB" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
                 </StackPanel>
             </Button>
         </StackPanel>
