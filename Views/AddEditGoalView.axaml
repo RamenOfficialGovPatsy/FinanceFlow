@@ -25,7 +25,8 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto, *, Auto" Margin="24,24,24,20">
+    <Grid RowDefinitions="Auto, *, Auto" Margin="24,24,24,20" 
+            Background="Transparent" PointerPressed="Root_PointerPressed">
         
         <Grid Grid.Row="0" Margin="0,0,0,24">
             <TextBlock Text="{Binding WindowTitle}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource AppText}"/>
@@ -89,7 +90,9 @@
                 <StackPanel Spacing="8">
                     <TextBlock Classes="Label" Text="Текущая сумма"/>
                     <Grid ColumnDefinitions="*, Auto">
-                        <NumericUpDown Value="{Binding CurrentAmount, Mode=TwoWay}" FormatString="N0" Minimum="0" ParsingNumberStyle="Integer" HorizontalAlignment="Stretch"/>
+                        <NumericUpDown Value="{Binding CurrentAmount, Mode=TwoWay}" 
+                                        ToolTip.Tip="Сколько вы уже накопили на данный момент"
+                                        FormatString="N0" Minimum="0" ParsingNumberStyle="Integer" HorizontalAlignment="Stretch"/>
                         <TextBlock Grid.Column="1" Text="₽" FontSize="16" VerticalAlignment="Center" Margin="12,0,0,0" Foreground="{StaticResource AppTextSecondary}"/>
                     </Grid>
                 </StackPanel>
@@ -116,13 +119,18 @@
 
                 <StackPanel Spacing="8">
                     <TextBlock Classes="Label" Text="Описание"/>
-                    <TextBox Text="{Binding Description, Mode=TwoWay}" Watermark="Добавьте описание..." Height="120" AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"/>
+                    <TextBox Text="{Binding Description, Mode=TwoWay}" 
+                            MaxLength="500"
+                            ToolTip.Tip="Максимальная длина - 500 символов"
+                            Watermark="Добавьте описание..." 
+                            Height="120" AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"/>
                 </StackPanel>
 
                 <StackPanel Spacing="8">
                     <TextBlock Classes="Label" Text="Изображение цели"/>
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Button Height="40" Background="{StaticResource AppCardBackground}" BorderThickness="0" CornerRadius="6" Padding="20, 0"
+                                
                                 Click="LoadImageButton_Click"> 
                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                 <TextBlock Text="📎" Foreground="#8B5CF6" FontSize="18" VerticalAlignment="Center" FontFamily="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, System"/>
@@ -130,10 +138,11 @@
                             </StackPanel>
                         </Button>
                         <Button Height="40" Background="{StaticResource AppCardBackground}" BorderThickness="0" CornerRadius="6" Padding="20, 0"
+                                
                                 Command="{Binding DeleteImageCommand}">
                              <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                 <TextBlock Text="🗑️" FontSize="16" VerticalAlignment="Center" FontFamily="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, System"/>
-                                <TextBlock Text="Удалить изображение" Foreground="#EF4444" FontWeight="Normal" VerticalAlignment="Center"/>
+                                <TextBlock Text="Удалить текущее изображение" Foreground="#EF4444" FontWeight="Normal" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>

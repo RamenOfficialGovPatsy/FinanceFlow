@@ -14,5 +14,11 @@ namespace FinanceFlow.Views
         {
             AvaloniaXamlLoader.Load(this);
         }
+
+        private void Root_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            topLevel?.FocusManager?.ClearFocus();
+        }
     }
 }

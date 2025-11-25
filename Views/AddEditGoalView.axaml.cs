@@ -20,6 +20,14 @@ namespace FinanceFlow.Views
             AvaloniaXamlLoader.Load(this);
         }
 
+        // Обработчик клика по пустому месту
+        private void Root_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+        {
+            // Получаем доступ к окну и сбрасываем фокус
+            var topLevel = TopLevel.GetTopLevel(this);
+            topLevel?.FocusManager?.ClearFocus();
+        }
+
         // Обработчик загрузки изображения
         private async void LoadImageButton_Click(object? sender, RoutedEventArgs e)
         {

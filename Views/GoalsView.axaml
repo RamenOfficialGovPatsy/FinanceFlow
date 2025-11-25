@@ -14,7 +14,7 @@
     <Grid RowDefinitions="Auto, *">
         
         <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="40,20,40,10">
-            <Button Grid.Column="0" Classes="Analytics" Click="AnalyticsButton_Click">
+            <Button Grid.Column="0" Classes="Analytics" Click="AnalyticsButton_Click" ToolTip.Tip="Просмотр графиков и отчетов">
                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                     <TextBlock Text="📊" FontFamily="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, System" FontSize="16" VerticalAlignment="Center"/>
                     <TextBlock Text="Аналитика" Foreground="{StaticResource AppPrimary}" FontWeight="SemiBold" VerticalAlignment="Center"/>
@@ -95,6 +95,7 @@
                                             </TextBlock>
                                             
                                             <ProgressBar Value="{Binding ProgressPercentage}" 
+                                                         ToolTip.Tip="{Binding ProgressPercentage, StringFormat='{}{0}%'}"
                                                          Foreground="{Binding ProgressColor}"
                                                          Minimum="0" Maximum="100"/>
                                         </StackPanel>

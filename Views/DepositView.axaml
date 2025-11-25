@@ -7,7 +7,8 @@
              x:Class="FinanceFlow.Views.DepositView"
              x:DataType="vm:DepositViewModel">
 
-    <Grid RowDefinitions="Auto, *" Margin="24">
+    <Grid RowDefinitions="Auto, *" Margin="24" 
+            Background="Transparent" PointerPressed="Root_PointerPressed">
         
         <TextBlock Grid.Row="0" 
                    Text="Пополнение цели" 
@@ -58,6 +59,7 @@
                 <StackPanel Spacing="8">
                     <TextBlock Classes="Label" Text="Комментарий"/>
                     <TextBox Text="{Binding Comment, Mode=TwoWay}" 
+                            ToolTip.Tip="Максимальная длина - 200 символов"
                              Watermark="Например: Аванс за ноябрь" 
                              HorizontalAlignment="Stretch"/>
                 </StackPanel>
@@ -148,7 +150,7 @@
                                         <Button Background="#2D3748" Padding="10,6" CornerRadius="6"
                                                 Command="{Binding $parent[UserControl].DataContext.DeleteHistoryItemCommand}"
                                                 CommandParameter="{Binding}"
-                                                ToolTip.Tip="Удалить запись">
+                                                ToolTip.Tip="Удалить запись и вернуть деньги в баланс цели">
                                             <StackPanel Orientation="Horizontal" Spacing="6">
                                                 <TextBlock Text="❌" FontSize="14" Foreground="#EF4444" FontFamily="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, System" VerticalAlignment="Center"/>
                                                 <TextBlock Text="Удалить" FontSize="12" Foreground="#EF4444" VerticalAlignment="Center"/>
