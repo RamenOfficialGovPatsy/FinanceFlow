@@ -153,7 +153,9 @@
                     </Panel>
                 </Border>
 
-                <TextBlock Text="JPG, PNG • до 2 МБ" Foreground="{StaticResource AppTextSecondary}" FontSize="12" HorizontalAlignment="Center" Margin="0, -10, 0, 20"/>
+                <TextBlock Text="JPG, PNG, BMP, WEBP • Макс. размер файла: 15 МБ"
+                Foreground="{StaticResource AppTextSecondary}" 
+                FontSize="12" HorizontalAlignment="Center" Margin="0, -10, 0, 20"/>
 
             </StackPanel>
         </ScrollViewer>

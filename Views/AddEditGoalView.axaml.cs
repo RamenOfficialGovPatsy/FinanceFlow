@@ -1,14 +1,15 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using Avalonia.Platform.Storage; // Для работы с файлами
+using Avalonia.Platform.Storage;
 using FinanceFlow.ViewModels;
-using System.Collections.Generic;
 
 namespace FinanceFlow.Views
 {
     public partial class AddEditGoalView : UserControl
     {
+        private const long MaxFileSize = 15 * 1024 * 1024;
+        private readonly string[] _allowedExtensions = { ".jpg", ".jpeg", ".png", ".bmp", ".webp" };
         public AddEditGoalView()
         {
             InitializeComponent();
@@ -22,52 +23,56 @@ namespace FinanceFlow.Views
         // Обработчик загрузки изображения
         private async void LoadImageButton_Click(object? sender, RoutedEventArgs e)
         {
-            // Получаем доступ к окну
             var topLevel = TopLevel.GetTopLevel(this);
             if (topLevel == null) return;
 
-            // Открываем диалог выбора файла
             var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
                 Title = "Выберите изображение цели",
                 AllowMultiple = false,
                 FileTypeFilter = new List<FilePickerFileType>
                 {
-                    FilePickerFileTypes.ImageAll // Разрешаем все форматы изображений
+                    FilePickerFileTypes.ImageAll
                 }
             });
 
             if (files.Count >= 1)
             {
-                // Получаем путь к файлу
-                // В Avalonia 11 путь может быть URI, поэтому приводим к LocalPath
                 var filePath = files[0].Path.LocalPath;
 
-                // Передаем путь во ViewModel
-                if (DataContext is AddEditGoalViewModel vm)
+                try
                 {
-                    vm.SetImage(filePath);
+                    var fileInfo = new FileInfo(filePath);
+
+                    // 1. ПРОВЕРКА ФОРМАТА (РАСШИРЕНИЯ)
+                    var extension = fileInfo.Extension.ToLowerInvariant(); // .jpg
+                    if (!_allowedExtensions.Contains(extension))
+                    {
+                        Console.WriteLine($"[Ошибка] Неподдерживаемый формат: {extension}. Разрешены: JPG, PNG, BMP, WEBP.");
+                        // Здесь потом будет MessageBox.Show("Неверный формат...");
+                        return;
+                    }
+
+                    // 2. ПРОВЕРКА РАЗМЕРА
+                    if (fileInfo.Length > MaxFileSize)
+                    {
+                        Console.WriteLine($"[Ошибка] Файл слишком большой: {fileInfo.Length / 1024 / 1024} МБ. Лимит: 15 МБ.");
+                        // Здесь потом будет MessageBox.Show("Файл слишком большой...");
+                        return;
+                    }
+
+                    // Если все проверки пройдены - передаем во ViewModel
+                    if (DataContext is AddEditGoalViewModel vm)
+                    {
+                        vm.SetImage(filePath);
+                        Console.WriteLine($"[Успех] Изображение загружено: {fileInfo.Name}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка проверки файла: {ex.Message}");
                 }
             }
         }
-
-        // Обработчик кнопки "Отмена"
-        /*
-        private void CancelButton_Click(object? sender, RoutedEventArgs e)
-        {
-            if (VisualRoot is Window parentWindow)
-            {
-                parentWindow.Close();
-            }
-        }
-        */
-
-        // Обработчик кнопки "Сохранить"
-        /*
-        private void SaveButton_Click(object? sender, RoutedEventArgs e)
-        {
-            Console.WriteLine("Кнопка 'Сохранить' нажата");
-        }
-        */
     }
 }
