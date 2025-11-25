@@ -2,8 +2,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:FinanceFlow.ViewModels"
              mc:Ignorable="d" d:DesignWidth="520" d:DesignHeight="850"
-             x:Class="FinanceFlow.Views.DepositView">
+             x:Class="FinanceFlow.Views.DepositView"
+             x:DataType="vm:DepositViewModel">
 
     <Grid RowDefinitions="Auto, *" Margin="24">
         
@@ -22,17 +24,15 @@
                     <StackPanel Spacing="8">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <TextBlock Text="Цель:" Foreground="{StaticResource AppTextSecondary}"/>
-                            <TextBlock Text="IPHONE 15 PRO" Foreground="{StaticResource AppText}"/>
+                            <TextBlock Text="{Binding GoalTitle}" Foreground="{StaticResource AppText}" FontWeight="SemiBold"/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <TextBlock Text="Прогресс:" Foreground="{StaticResource AppTextSecondary}"/>
                             <TextBlock>
-                                <Run Text="45 000"/>
-                                <Run Text="/" Foreground="{StaticResource AppTextSecondary}"/>
-                                <Run Text="120 000 ₽"/>
+                                <Run Text="{Binding ProgressText}"/> 
                             </TextBlock>
-                            <TextBlock Text="(37%)" Foreground="{StaticResource AppPrimary}"/>
+                            <TextBlock Text="{Binding ProgressPercent}" Foreground="{StaticResource AppPrimary}"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -40,67 +40,57 @@
                 <StackPanel Spacing="8">
                     <TextBlock Classes="Label" Text="Сумма пополнения"/>
                     <Grid ColumnDefinitions="*, Auto">
-                        <NumericUpDown Value="5000" FormatString="N0" Minimum="1" ParsingNumberStyle="Integer" HorizontalAlignment="Stretch"/>
+                        <NumericUpDown Value="{Binding Amount, Mode=TwoWay}" 
+                                       FormatString="N0" Minimum="1" ParsingNumberStyle="Integer" 
+                                       HorizontalAlignment="Stretch"/>
                         <TextBlock Grid.Column="1" Text="₽" FontSize="16" VerticalAlignment="Center" Margin="12,0,0,0" Foreground="{StaticResource AppTextSecondary}"/>
                     </Grid>
                 </StackPanel>
 
                 <StackPanel Spacing="8">
                     <TextBlock Classes="Label" Text="Тип пополнения"/>
-                    <ComboBox SelectedIndex="0" HorizontalAlignment="Stretch" PlaceholderText="Выберите тип">
-                        <ComboBoxItem Content="Обычное"/>
-                        <ComboBoxItem Content="Зарплата"/>
-                        <ComboBoxItem Content="Фриланс"/>
-                        <ComboBoxItem Content="Бонус"/>
-                        <ComboBoxItem Content="Другое"/>
-                    </ComboBox>
+                    <ComboBox ItemsSource="{Binding DepositTypes}"
+                              SelectedItem="{Binding SelectedDepositType, Mode=TwoWay}"
+                              HorizontalAlignment="Stretch" 
+                              PlaceholderText="Выберите тип"/>
                 </StackPanel>
 
                 <StackPanel Spacing="8">
                     <TextBlock Classes="Label" Text="Комментарий"/>
-                    <TextBox Watermark="Аванс за ноябрь" HorizontalAlignment="Stretch"/>
+                    <TextBox Text="{Binding Comment, Mode=TwoWay}" 
+                             Watermark="Например: Аванс за ноябрь" 
+                             HorizontalAlignment="Stretch"/>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" 
-                Spacing="12" 
-                HorizontalAlignment="Center" 
-                Margin="0,10,0,10">
+                            Spacing="12" 
+                            HorizontalAlignment="Center" 
+                            Margin="0,10,0,10">
                     
                     <Button Classes="Secondary" 
-                    Width="140" 
-                    Height="40" 
-                    Padding="0"
-                    Click="CancelButton_Click">
-                        <StackPanel 
-                        Orientation="Horizontal" 
-                        Spacing="8" 
-                        HorizontalAlignment="Center" 
-                        VerticalAlignment="Center">
+                            Width="120" Height="40" Padding="0"
+                            Command="{Binding CancelCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Path Data="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" 
-                            Fill="#EF4444" 
-                            Width="14" 
-                            Height="14" 
-                            Stretch="Uniform" VerticalAlignment="Center"/>
-                            <TextBlock Text="Отмена" 
-                            Foreground="{StaticResource AppTextSecondary}" 
-                            VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
+                                  Fill="#EF4444" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
+                            <TextBlock Text="Закрыть" Foreground="{StaticResource AppTextSecondary}" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
                         </StackPanel>
                     </Button>
                     
+                    <Button Background="{StaticResource AppCardBackground}" 
+                            Width="40" Height="40" Padding="0"
+                            Command="{Binding CancelEditCommand}"
+                            IsVisible="{Binding IsEditMode}"
+                            ToolTip.Tip="Отменить редактирование">
+                        <TextBlock Text="↩️" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, System"/>
+                    </Button>
+                    
                     <Button Classes="Primary" 
-                    Width="140" 
-                    Height="40" 
-                    Padding="0"
-                    Click="AddButton_Click">
-                        <StackPanel Orientation="Horizontal" 
-                        Spacing="8" 
-                        HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock Text="✅" FontSize="16" 
-                            VerticalAlignment="Center"/>
-                            <TextBlock Text="Добавить" 
-                            Foreground="#D1D5DB" 
-                            VerticalAlignment="Center" 
-                            FontSize="14" FontWeight="SemiBold"/>
+                            Width="160" Height="40" Padding="0"
+                            Command="{Binding SaveCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding ButtonIcon}" FontSize="16" FontFamily="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, System" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding ButtonText}" Foreground="#D1D5DB" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>
@@ -111,101 +101,65 @@
                     <Border Grid.Column="2" Height="1" Background="{StaticResource AppBorderBrush}" VerticalAlignment="Center"/>
                 </Grid>
 
-                <StackPanel Spacing="10">
+                <ItemsControl ItemsSource="{Binding DepositHistory}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="10"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
                     
-                    <Border Background="{StaticResource AppCardBackground}" CornerRadius="8" Padding="12">
-                        <Grid ColumnDefinitions="Auto, *, Auto">
-                            <TextBlock Grid.Column="0" Text="🔹" FontSize="10" VerticalAlignment="Center" Margin="0,0,12,0" Foreground="#3B82F6"/>
-                            
-                            <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
-                                <TextBlock FontSize="14">
-                                    <Run Text="25.11.2023" Foreground="{StaticResource AppTextSecondary}"/>
-                                    <Run Text=" • " Foreground="{StaticResource AppTextSecondary}"/>
-                                    <Run Text="10 000 ₽" Foreground="{StaticResource AppPrimary}"/>
-                                </TextBlock>
-                                <TextBlock Text="Зарплата" FontSize="12" Foreground="{StaticResource AppTextSecondary}"/>
-                            </StackPanel>
-                            
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                                <Button Background="#2D3748" Padding="10,6" CornerRadius="6">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <TextBlock Text="✏️" FontSize="14" FontFamily="Segoe UI Emoji, Apple Color Emoji, System" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Редактировать" FontSize="12" Foreground="{StaticResource AppTextSecondary}" VerticalAlignment="Center"/>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:DepositItemViewModel">
+                            <Border Background="{StaticResource AppCardBackground}" CornerRadius="8" Padding="12">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <TextBlock Grid.Column="0" Text="{Binding Icon}" 
+                                               Foreground="{Binding IconColor}"
+                                               FontSize="16" 
+                                               FontFamily="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, System"
+                                               VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    
+                                    <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                                        <TextBlock FontSize="14">
+                                            <Run Text="{Binding Date, StringFormat='dd.MM.yyyy'}" Foreground="{StaticResource AppTextSecondary}"/>
+                                            <Run Text=" • " Foreground="{StaticResource AppTextSecondary}"/>
+                                            <Run Text="{Binding Amount, StringFormat='{}{0:N0} ₽'}" Foreground="{StaticResource AppPrimary}"/>
+                                        </TextBlock>
+                                        
+                                        <TextBlock Text="{Binding DisplayType}" FontSize="12" Foreground="{StaticResource AppTextSecondary}"/>
+                                        
+                                        <TextBlock Text="{Binding Comment}" 
+                                                   IsVisible="{Binding HasComment}"
+                                                   FontSize="12" Foreground="#6B7280" FontStyle="Italic"
+                                                   TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
-                                </Button>
-                                <Button Background="#2D3748" Padding="10,6" CornerRadius="6">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <TextBlock Text="❌" FontSize="14" Foreground="#EF4444" FontFamily="Segoe UI Emoji, Apple Color Emoji, System" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Удалить" FontSize="12" Foreground="#EF4444" VerticalAlignment="Center"/>
+                                    
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                                        
+                                        <Button Background="#2D3748" Padding="10,6" CornerRadius="6"
+                                                Command="{Binding $parent[UserControl].DataContext.StartEditCommand}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip.Tip="Редактировать запись">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBlock Text="✏️" FontSize="14" FontFamily="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, System" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Редактировать" FontSize="12" Foreground="{StaticResource AppTextSecondary}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                        
+                                        <Button Background="#2D3748" Padding="10,6" CornerRadius="6"
+                                                Command="{Binding $parent[UserControl].DataContext.DeleteHistoryItemCommand}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip.Tip="Удалить запись">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBlock Text="❌" FontSize="14" Foreground="#EF4444" FontFamily="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, System" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Удалить" FontSize="12" Foreground="#EF4444" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
                                     </StackPanel>
-                                </Button>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <Border Background="{StaticResource AppCardBackground}" CornerRadius="8" Padding="12">
-                        <Grid ColumnDefinitions="Auto, *, Auto">
-                            <TextBlock Grid.Column="0" Text="🔸" FontSize="10" VerticalAlignment="Center" Margin="0,0,12,0" Foreground="#F59E0B"/>
-                            
-                            <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
-                                <TextBlock FontSize="14">
-                                    <Run Text="15.11.2023" Foreground="{StaticResource AppTextSecondary}"/>
-                                    <Run Text=" • " Foreground="{StaticResource AppTextSecondary}"/>
-                                    <Run Text="15 000 ₽" Foreground="{StaticResource AppPrimary}"/>
-                                </TextBlock>
-                                <TextBlock Text="Фриланс" FontSize="12" Foreground="{StaticResource AppTextSecondary}"/>
-                                <TextBlock Text="Проект для клиента" FontSize="12" Foreground="#6B7280" FontStyle="Italic"/>
-                            </StackPanel>
-                            
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                                <Button Background="#2D3748" Padding="10,6" CornerRadius="6">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <TextBlock Text="✏️" FontSize="14" FontFamily="Segoe UI Emoji, Apple Color Emoji, System" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Редактировать" FontSize="12" Foreground="{StaticResource AppTextSecondary}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-                                <Button Background="#2D3748" Padding="10,6" CornerRadius="6">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <TextBlock Text="❌" FontSize="14" Foreground="#EF4444" FontFamily="Segoe UI Emoji, Apple Color Emoji, System" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Удалить" FontSize="12" Foreground="#EF4444" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-                    
-                    <Border Background="{StaticResource AppCardBackground}" CornerRadius="8" Padding="12">
-                        <Grid ColumnDefinitions="Auto, *, Auto">
-                            <TextBlock Grid.Column="0" Text="🔹" FontSize="10" VerticalAlignment="Center" Margin="0,0,12,0" Foreground="#3B82F6"/>
-                            
-                            <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
-                                <TextBlock FontSize="14">
-                                    <Run Text="01.11.2023" Foreground="{StaticResource AppTextSecondary}"/>
-                                    <Run Text=" • " Foreground="{StaticResource AppTextSecondary}"/>
-                                    <Run Text="20 000 ₽" Foreground="{StaticResource AppPrimary}"/>
-                                </TextBlock>
-                                <TextBlock Text="Зарплата" FontSize="12" Foreground="{StaticResource AppTextSecondary}"/>
-                                <TextBlock Text="Основная зарплата" FontSize="12" Foreground="#6B7280" FontStyle="Italic"/>
-                            </StackPanel>
-                            
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                                <Button Background="#2D3748" Padding="10,6" CornerRadius="6">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <TextBlock Text="✏️" FontSize="14" FontFamily="Segoe UI Emoji, Apple Color Emoji, System" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Редактировать" FontSize="12" Foreground="{StaticResource AppTextSecondary}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-                                <Button Background="#2D3748" Padding="10,6" CornerRadius="6">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <TextBlock Text="❌" FontSize="14" Foreground="#EF4444" FontFamily="Segoe UI Emoji, Apple Color Emoji, System" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Удалить" FontSize="12" Foreground="#EF4444" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
                 
                 <Border Height="20"/>
 

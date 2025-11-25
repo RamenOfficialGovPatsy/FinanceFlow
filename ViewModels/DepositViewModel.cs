@@ -1,6 +1,8 @@
 using FinanceFlow.Models;
+using FinanceFlow.Services.Interfaces;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -8,11 +10,20 @@ namespace FinanceFlow.ViewModels
 {
     public class DepositViewModel : ViewModelBase
     {
-        private readonly Goal _goal;
+        private Goal _goal;
+        private readonly IDepositService _depositService;
+        private readonly IGoalService _goalService;
+
+        // Состояние редактирования
+        private bool _isEditMode;
+        private int _editingDepositId;
+
+        public event Action? OnProgressUpdated;
+        public event Action? RequestClose;
 
         // --- Свойства ввода ---
 
-        private decimal _amount = 5000;
+        private decimal _amount = 1000;
         public decimal Amount
         {
             get => _amount;
@@ -33,199 +44,288 @@ namespace FinanceFlow.ViewModels
             set => SetProperty(ref _comment, value);
         }
 
-        // Список типов пополнения для ComboBox
-        public ObservableCollection<string> DepositTypes { get; } = new()
+        // --- Свойства состояния UI ---
+
+        public bool IsEditMode
         {
-            "Обычное",
-            "Зарплата",
-            "Фриланс",
-            "Бонус",
-            "Другое"
-        };
-
-        // --- Свойства информации о цели (Read Only) ---
-
-        public string GoalTitle => _goal?.Title ?? "Неизвестная цель";
-
-        public string ProgressText
-        {
-            get
+            get => _isEditMode;
+            set
             {
-                if (_goal == null) return "0 / 0 ₽";
-                return $"{_goal.CurrentAmount:N0} / {_goal.TargetAmount:N0} ₽";
+                if (SetProperty(ref _isEditMode, value))
+                {
+                    OnPropertyChanged(nameof(ButtonText));
+                    OnPropertyChanged(nameof(ButtonIcon));
+                }
             }
         }
+
+        public string ButtonText => IsEditMode ? "Сохранить" : "Внести средства";
+        public string ButtonIcon => IsEditMode ? "💾" : "💰";
+
+        public ObservableCollection<string> DepositTypes { get; } = new()
+        {
+            "Обычное", "Зарплата", "Фриланс", "Бонус", "Другое"
+        };
+
+        // --- Свойства цели ---
+
+        public string GoalTitle => _goal.Title;
+        public decimal CurrentAmount => _goal.CurrentAmount;
+        public string ProgressText => $"{CurrentAmount:N0} / {_goal.TargetAmount:N0} ₽";
 
         public string ProgressPercent
         {
             get
             {
-                if (_goal == null || _goal.TargetAmount == 0) return "(0%)";
-                var percent = (_goal.CurrentAmount / _goal.TargetAmount) * 100;
-                return $"({percent:F0}%)";
+                if (_goal.TargetAmount == 0) return "(0%)";
+                var percent = (CurrentAmount / _goal.TargetAmount) * 100;
+                return $"({Math.Min(percent, 100):F0}%)";
             }
         }
-
-        // --- История пополнений ---
 
         public ObservableCollection<DepositItemViewModel> DepositHistory { get; } = new();
 
         // --- Команды ---
 
-        public ICommand AddDepositCommand { get; }
+        public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
-        public ICommand EditHistoryItemCommand { get; }
         public ICommand DeleteHistoryItemCommand { get; }
+        public ICommand StartEditCommand { get; }
+        public ICommand CancelEditCommand { get; }
 
-        // --- Конструктор ---
+        // --- Конструкторы ---
 
-        // Принимает цель, для которой открыто окно
-        public DepositViewModel(Goal goal)
-        {
-            _goal = goal ?? throw new ArgumentNullException(nameof(goal));
-
-            // Инициализация команд
-            AddDepositCommand = new AsyncRelayCommand(AddDepositAsync);
-            CancelCommand = new AsyncRelayCommand(() => Task.CompletedTask); // Логику закрытия окна добавим позже
-            EditHistoryItemCommand = new AsyncRelayCommand<DepositItemViewModel>(EditHistoryItemAsync);
-            DeleteHistoryItemCommand = new AsyncRelayCommand<DepositItemViewModel>(DeleteHistoryItemAsync);
-
-            // Загрузка моковых данных (как на макете)
-            LoadMockHistory();
-        }
-
-        // Конструктор без параметров для Design-time (чтобы XAML не ругался)
-        // Конструктор без параметров для Design-time
         public DepositViewModel()
         {
-            _goal = new Goal
-            {
-                Title = "IPHONE 15 PRO",
-                CurrentAmount = 45000,
-                TargetAmount = 120000
-            };
+            _goal = new Goal { Title = "Design Goal", TargetAmount = 100000 };
+            _depositService = null!;
+            _goalService = null!;
 
-            // Инициализируем команды-заглушки, чтобы избежать Warning CS8618
-            AddDepositCommand = new AsyncRelayCommand(() => Task.CompletedTask);
+            SaveCommand = new AsyncRelayCommand(() => Task.CompletedTask);
             CancelCommand = new AsyncRelayCommand(() => Task.CompletedTask);
-            EditHistoryItemCommand = new AsyncRelayCommand<DepositItemViewModel>(_ => Task.CompletedTask);
             DeleteHistoryItemCommand = new AsyncRelayCommand<DepositItemViewModel>(_ => Task.CompletedTask);
+            StartEditCommand = new AsyncRelayCommand<DepositItemViewModel>(_ => Task.CompletedTask);
+            CancelEditCommand = new AsyncRelayCommand(() => Task.CompletedTask);
+        }
 
-            LoadMockHistory();
+        public DepositViewModel(Goal goal, IDepositService depositService, IGoalService goalService)
+        {
+            _goal = goal ?? throw new ArgumentNullException(nameof(goal));
+            _depositService = depositService ?? throw new ArgumentNullException(nameof(depositService));
+            _goalService = goalService ?? throw new ArgumentNullException(nameof(goalService));
+
+            SaveCommand = new AsyncRelayCommand(SaveAsync);
+            DeleteHistoryItemCommand = new AsyncRelayCommand<DepositItemViewModel>(DeleteDepositAsync);
+
+            // Команда начала редактирования
+            StartEditCommand = new AsyncRelayCommand<DepositItemViewModel>(StartEdit);
+
+            CancelCommand = new AsyncRelayCommand(() =>
+            {
+                RequestClose?.Invoke();
+                return Task.CompletedTask;
+            });
+
+            // Команда отмены редактирования (сброс формы)
+            CancelEditCommand = new AsyncRelayCommand(() =>
+            {
+                ResetForm();
+                return Task.CompletedTask;
+            });
+
+            _ = LoadHistoryAsync();
         }
 
         // --- Логика ---
 
-        private void LoadMockHistory()
+        private async Task LoadHistoryAsync()
         {
-            // Эти данные в будущем будут браться из БД (GoalDeposit)
-            DepositHistory.Add(new DepositItemViewModel
-            {
-                DepositId = 1,
-                Date = new DateTime(2023, 11, 25),
-                Amount = 10000,
-                Type = "Зарплата",
-                Comment = null
-            });
-
-            DepositHistory.Add(new DepositItemViewModel
-            {
-                DepositId = 2,
-                Date = new DateTime(2023, 11, 15),
-                Amount = 15000,
-                Type = "Фриланс",
-                Comment = "Проект для клиента"
-            });
-
-            DepositHistory.Add(new DepositItemViewModel
-            {
-                DepositId = 3,
-                Date = new DateTime(2023, 11, 01),
-                Amount = 20000,
-                Type = "Зарплата",
-                Comment = "Основная зарплата"
-            });
+            if (_depositService == null) return;
+            var deposits = await _depositService.GetDepositsByGoalAsync(_goal.GoalId);
+            DepositHistory.Clear();
+            foreach (var dep in deposits) DepositHistory.Add(new DepositItemViewModel(dep));
         }
 
-        private async Task AddDepositAsync()
+        private async Task ReloadGoalFromDb()
         {
-            // Здесь будет вызов DepositService для сохранения в БД
-            await Task.Delay(100);
-            Console.WriteLine($"Добавляем пополнение: {Amount} ₽, Тип: {SelectedDepositType}, Коммент: {Comment}");
+            if (_goalService == null) return;
+            var updatedGoal = await _goalService.GetGoalByIdAsync(_goal.GoalId);
+            if (updatedGoal != null)
+            {
+                _goal.CurrentAmount = updatedGoal.CurrentAmount;
+                _goal.IsCompleted = updatedGoal.IsCompleted;
+                OnPropertyChanged(nameof(CurrentAmount));
+                OnPropertyChanged(nameof(ProgressText));
+                OnPropertyChanged(nameof(ProgressPercent));
+            }
         }
 
-        private async Task EditHistoryItemAsync(DepositItemViewModel? item)
+        // FIX: Изменили void на Task
+        private Task StartEdit(DepositItemViewModel? item)
         {
-            if (item == null) return;
-            await Task.Delay(50);
-            Console.WriteLine($"Редактируем запись ID: {item.DepositId}");
+            if (item == null) return Task.CompletedTask;
+
+            _editingDepositId = item.DepositId;
+            Amount = item.Amount;
+            Comment = item.Comment;
+            SelectedDepositType = ConvertKeyToType(item.TypeKey);
+
+            IsEditMode = true;
+
+            return Task.CompletedTask;
         }
 
-        private async Task DeleteHistoryItemAsync(DepositItemViewModel? item)
+        private void ResetForm()
         {
-            if (item == null) return;
-            await Task.Delay(50);
-            DepositHistory.Remove(item); // Удаляем визуально для теста
-            Console.WriteLine($"Удаляем запись ID: {item.DepositId}");
+            Amount = 1000;
+            Comment = string.Empty;
+            SelectedDepositType = "Обычное";
+            IsEditMode = false;
+            _editingDepositId = 0;
+        }
+
+        private async Task SaveAsync()
+        {
+            if (Amount <= 0) return;
+
+            var deposit = new GoalDeposit
+            {
+                GoalId = _goal.GoalId,
+                Amount = Amount,
+                DepositType = ConvertTypeToKey(SelectedDepositType),
+                Comment = Comment,
+                DepositDate = DateTime.Now
+            };
+
+            bool success;
+            string message;
+
+            if (IsEditMode)
+            {
+                deposit.DepositId = _editingDepositId;
+                (success, message) = await _depositService.UpdateDepositAsync(deposit);
+            }
+            else
+            {
+                (success, message) = await _depositService.AddDepositAsync(deposit);
+            }
+
+            if (success)
+            {
+                await ReloadGoalFromDb();
+                await LoadHistoryAsync();
+                OnProgressUpdated?.Invoke();
+
+                if (IsEditMode)
+                {
+                    ResetForm();
+                    Console.WriteLine("Изменения сохранены");
+                }
+                else
+                {
+                    RequestClose?.Invoke();
+                    Console.WriteLine("Пополнение добавлено");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Ошибка: {message}");
+            }
+        }
+
+        private async Task DeleteDepositAsync(DepositItemViewModel? itemVm)
+        {
+            if (itemVm == null) return;
+
+            if (IsEditMode && itemVm.DepositId == _editingDepositId)
+            {
+                ResetForm();
+            }
+
+            var result = await _depositService.DeleteDepositAsync(itemVm.DepositId);
+
+            if (result.success)
+            {
+                await ReloadGoalFromDb();
+                DepositHistory.Remove(itemVm);
+                OnProgressUpdated?.Invoke();
+                Console.WriteLine("Пополнение удалено");
+            }
+            else
+            {
+                Console.WriteLine($"Ошибка удаления: {result.message}");
+            }
+        }
+
+        private string ConvertTypeToKey(string displayType)
+        {
+            return displayType switch
+            {
+                "Обычное" => "regular",
+                "Зарплата" => "salary",
+                "Фриланс" => "freelance",
+                "Бонус" => "bonus",
+                _ => "other"
+            };
+        }
+
+        private string ConvertKeyToType(string key)
+        {
+            return key switch
+            {
+                "salary" => "Зарплата",
+                "freelance" => "Фриланс",
+                "bonus" => "Бонус",
+                "other" => "Другое",
+                _ => "Обычное"
+            };
         }
     }
 
-    /// <summary>
-    /// Вспомогательная модель для элемента списка истории.
-    /// Содержит логику отображения иконки и цвета в зависимости от типа.
-    /// </summary>
     public class DepositItemViewModel
     {
-        public int DepositId { get; set; }
-        public DateTime Date { get; set; }
-        public decimal Amount { get; set; }
-        public string Type { get; set; } = string.Empty;
-        public string? Comment { get; set; }
+        public int DepositId { get; }
+        public decimal Amount { get; }
+        public DateTime Date { get; }
+        public string TypeKey { get; }
+        public string Comment { get; }
 
-        // Вычисляемые свойства для UI (иконки и цвета)
-
-        public string Icon => Type switch
+        public DepositItemViewModel(GoalDeposit deposit)
         {
-            "Зарплата" => "🔹",
-            "Фриланс" => "🔸",
-            "Бонус" => "🔸", // Зеленого ромба нет в стандартных эмодзи, используем оранжевый или можно "❇️"
-            "Обычное" => "🔹",
-            _ => "▫️"
-        };
-
-        public string IconColor => Type switch
-        {
-            "Зарплата" => "#3B82F6", // Синий
-            "Фриланс" => "#F59E0B", // Оранжевый
-            "Бонус" => "#10B981",   // Зеленый
-            "Обычное" => "#8B5CF6", // Фиолетовый
-            _ => "#9CA3AF"          // Серый
-        };
-
-        public bool HasComment => !string.IsNullOrEmpty(Comment);
-    }
-
-    // Вспомогательный класс для команд с параметрами (если у вас его еще нет в AsyncRelayCommand.cs)
-    // Если есть - удалите этот блок.
-    public class AsyncRelayCommand<T> : ICommand
-    {
-        private readonly Func<T?, Task> _execute;
-        private readonly Func<T?, bool>? _canExecute;
-
-        // Добавляем пустые add/remove, чтобы убрать warning "Event is never used"
-        public event EventHandler? CanExecuteChanged { add { } remove { } }
-
-        public AsyncRelayCommand(Func<T?, Task> execute, Func<T?, bool>? canExecute = null)
-        {
-            _execute = execute;
-            _canExecute = canExecute;
+            DepositId = deposit.DepositId;
+            Amount = deposit.Amount;
+            Date = deposit.DepositDate;
+            TypeKey = deposit.DepositType;
+            Comment = deposit.Comment ?? string.Empty;
         }
 
-        public bool CanExecute(object? parameter) => _canExecute?.Invoke((T?)parameter) ?? true;
-
-        public async void Execute(object? parameter)
+        public string DisplayType => TypeKey switch
         {
-            await _execute((T?)parameter);
-        }
+            "salary" => "Зарплата",
+            "freelance" => "Фриланс",
+            "bonus" => "Бонус",
+            "other" => "Другое",
+            _ => "Обычное"
+        };
+
+        public string Icon => TypeKey switch
+        {
+            "salary" => "🔹",
+            "freelance" => "🔸",
+            "bonus" => "❇️",
+            "other" => "▫️",
+            _ => "🔹"
+        };
+
+        public string IconColor => TypeKey switch
+        {
+            "salary" => "#3B82F6",
+            "freelance" => "#F59E0B",
+            "bonus" => "#10B981",
+            "other" => "#9CA3AF",
+            _ => "#8B5CF6"
+        };
+
+        public bool HasComment => !string.IsNullOrWhiteSpace(Comment);
     }
 }

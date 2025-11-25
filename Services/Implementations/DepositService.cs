@@ -3,12 +3,13 @@ using FinanceFlow.Models;
 using FinanceFlow.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace FinanceFlow.Services.Implementations
 {
-    /// <summary>
-    /// Реализация сервиса для управления пополнениями
-    /// </summary>
     public class DepositService : IDepositService
     {
         private readonly AppDbContext _context;
@@ -20,191 +21,147 @@ namespace FinanceFlow.Services.Implementations
             _logger = logger;
         }
 
-        /// <inheritdoc/>
         public async Task<List<GoalDeposit>> GetAllDepositsAsync()
         {
-            try
-            {
-                return await _context.GoalDeposits
-                    .Include(d => d.Goal)
-                    .ThenInclude(g => g!.GoalCategory)
-                    .OrderByDescending(d => d.DepositDate)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка при получении списка пополнений");
-                return new List<GoalDeposit>();
-            }
+            return await _context.GoalDeposits
+                .Include(d => d.Goal)
+                .OrderByDescending(d => d.DepositDate)
+                .ToListAsync();
         }
 
-        /// <inheritdoc/>
         public async Task<List<GoalDeposit>> GetDepositsByGoalAsync(int goalId)
         {
-            try
-            {
-                return await _context.GoalDeposits
-                    .Include(d => d.Goal)
-                    .Where(d => d.GoalId == goalId)
-                    .OrderByDescending(d => d.DepositDate)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка при получении пополнений по цели {GoalId}", goalId);
-                return new List<GoalDeposit>();
-            }
+            return await _context.GoalDeposits
+                .Include(d => d.Goal)
+                .Where(d => d.GoalId == goalId)
+                .OrderByDescending(d => d.DepositDate)
+                .ToListAsync();
         }
 
-        /// <inheritdoc/>
         public async Task<(bool success, string message)> AddDepositAsync(GoalDeposit deposit)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
-
             try
             {
-                // Валидация бизнес-правил
-                var validationResult = await ValidateDepositAsync(deposit);
-                if (!validationResult.success)
-                    return validationResult;
+                if (deposit.Amount <= 0) return (false, "Сумма должна быть больше 0");
 
-                // Получаем цель с блокировкой для предотвращения гонок
-                var goal = await _context.Goals
-                    .FirstOrDefaultAsync(g => g.GoalId == deposit.GoalId);
+                var goal = await _context.Goals.FirstOrDefaultAsync(g => g.GoalId == deposit.GoalId);
+                if (goal == null) return (false, "Цель не найдена");
 
-                if (goal == null)
-                    return (false, "Цель не найдена");
+                // Нормализация даты для Npgsql
+                deposit.DepositDate = DateTime.SpecifyKind(deposit.DepositDate, DateTimeKind.Unspecified);
 
-                // Добавляем пополнение
-                deposit.DepositDate = DateTime.UtcNow;
                 _context.GoalDeposits.Add(deposit);
 
-                // Обновляем сумму цели
+                // Обновляем цель
                 goal.CurrentAmount += deposit.Amount;
+                CheckCompletion(goal);
 
-                // Проверяем выполнение цели
-                if (goal.CurrentAmount >= goal.TargetAmount)
-                {
-                    goal.IsCompleted = true;
-                    goal.CurrentAmount = goal.TargetAmount; // Не даем превысить целевую сумму
-                }
-
-                // Сохраняем изменения в рамках одной транзакции
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                _logger.LogInformation("Добавлено пополнение {Amount} для цели {GoalId}",
-                    deposit.Amount, deposit.GoalId);
-
-                return (true, "Пополнение успешно добавлено");
-            }
-            catch (DbUpdateException dbEx)
-            {
-                await transaction.RollbackAsync();
-                _logger.LogError(dbEx, "Ошибка базы данных при добавлении пополнения");
-                return (false, "Ошибка сохранения в базу данных");
+                return (true, "Пополнение добавлено");
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                _logger.LogError(ex, "Неожиданная ошибка при добавлении пополнения");
-                return (false, "Произошла непредвиденная ошибка");
+                _logger.LogError(ex, "Ошибка добавления");
+                return (false, "Ошибка БД");
             }
         }
 
-        /// <inheritdoc/>
+        public async Task<(bool success, string message)> UpdateDepositAsync(GoalDeposit deposit)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                if (deposit.Amount <= 0) return (false, "Сумма должна быть больше 0");
+
+                var existingDeposit = await _context.GoalDeposits
+                    .Include(d => d.Goal)
+                    .FirstOrDefaultAsync(d => d.DepositId == deposit.DepositId);
+
+                if (existingDeposit == null) return (false, "Пополнение не найдено");
+                var goal = existingDeposit.Goal;
+
+                // 1. Откатываем старую сумму
+                goal.CurrentAmount -= existingDeposit.Amount;
+
+                // 2. Применяем новые данные
+                existingDeposit.Amount = deposit.Amount;
+                existingDeposit.DepositType = deposit.DepositType;
+                existingDeposit.Comment = deposit.Comment; // <-- ВОТ ЭТО ОБНОВЛЯЕТ КОММЕНТАРИЙ
+
+                // (Дату обычно не меняем при редактировании суммы, но если нужно - раскомментируй)
+                // existingDeposit.DepositDate = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Unspecified);
+
+                // 3. Применяем новую сумму
+                goal.CurrentAmount += existingDeposit.Amount;
+                CheckCompletion(goal);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return (true, "Пополнение обновлено");
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Ошибка обновления");
+                return (false, "Ошибка БД");
+            }
+        }
+
         public async Task<(bool success, string message)> DeleteDepositAsync(int depositId)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
-
             try
             {
                 var deposit = await _context.GoalDeposits
                     .Include(d => d.Goal)
                     .FirstOrDefaultAsync(d => d.DepositId == depositId);
 
-                if (deposit == null)
-                    return (false, "Пополнение не найдено");
+                if (deposit == null) return (false, "Пополнение не найдено");
 
                 var goal = deposit.Goal;
-                if (goal != null)
-                {
-                    // Возвращаем сумму из цели
-                    goal.CurrentAmount -= deposit.Amount;
-
-                    // Если сумма стала меньше целевой, снимаем отметку о выполнении
-                    if (goal.CurrentAmount < goal.TargetAmount)
-                    {
-                        goal.IsCompleted = false;
-                    }
-
-                    // Не даем уйти в отрицательные значения
-                    if (goal.CurrentAmount < 0)
-                        goal.CurrentAmount = 0;
-                }
+                goal.CurrentAmount -= deposit.Amount;
+                CheckCompletion(goal);
 
                 _context.GoalDeposits.Remove(deposit);
+
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                _logger.LogInformation("Удалено пополнение {DepositId}", depositId);
-                return (true, "Пополнение успешно удалено");
-            }
-            catch (DbUpdateException dbEx)
-            {
-                await transaction.RollbackAsync();
-                _logger.LogError(dbEx, "Ошибка базы данных при удалении пополнения {DepositId}", depositId);
-                return (false, "Ошибка удаления из базы данных");
+                return (true, "Пополнение удалено");
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                _logger.LogError(ex, "Неожиданная ошибка при удалении пополнения {DepositId}", depositId);
-                return (false, "Произошла непредвиденная ошибка");
+                _logger.LogError(ex, "Ошибка удаления");
+                return (false, "Ошибка БД");
             }
         }
 
-        /// <inheritdoc/>
         public async Task<decimal> GetTotalDepositsByGoalAsync(int goalId)
         {
-            try
-            {
-                return await _context.GoalDeposits
-                    .Where(d => d.GoalId == goalId)
-                    .SumAsync(d => d.Amount);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка при расчете общей суммы пополнений для цели {GoalId}", goalId);
-                return 0;
-            }
+            return await _context.GoalDeposits
+                .Where(d => d.GoalId == goalId)
+                .SumAsync(d => d.Amount);
         }
 
-        /// <summary>
-        /// Валидация бизнес-правил для пополнения
-        /// </summary>
-        private async Task<(bool success, string message)> ValidateDepositAsync(GoalDeposit deposit)
+        private void CheckCompletion(Goal goal)
         {
-            if (deposit.Amount <= 0)
-                return (false, "Сумма пополнения должна быть больше 0");
+            if (goal.CurrentAmount < 0) goal.CurrentAmount = 0;
 
-            // Проверяем существование цели
-            var goal = await _context.Goals
-                .FirstOrDefaultAsync(g => g.GoalId == deposit.GoalId);
-
-            if (goal == null)
-                return (false, "Цель не найдена");
-
-            // Нельзя пополнять завершенную цель
-            if (goal.IsCompleted)
-                return (false, "Нельзя пополнять завершенную цель");
-
-            // Проверяем допустимые типы пополнений
-            var validTypes = new[] { "regular", "salary", "freelance", "bonus", "other" };
-            if (!validTypes.Contains(deposit.DepositType))
-                return (false, "Недопустимый тип пополнения");
-
-            return (true, string.Empty);
+            if (goal.CurrentAmount >= goal.TargetAmount)
+            {
+                goal.CurrentAmount = goal.TargetAmount;
+                goal.IsCompleted = true;
+            }
+            else
+            {
+                goal.IsCompleted = false;
+            }
         }
     }
 }

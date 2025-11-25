@@ -1,5 +1,7 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using FinanceFlow.ViewModels;
 
 namespace FinanceFlow.Windows
 {
@@ -8,6 +10,15 @@ namespace FinanceFlow.Windows
         public DepositWindow()
         {
             InitializeComponent();
+
+            // Подписываемся на событие закрытия
+            this.DataContextChanged += (s, e) =>
+            {
+                if (DataContext is DepositViewModel vm)
+                {
+                    vm.RequestClose += () => this.Close();
+                }
+            };
         }
 
         private void InitializeComponent()

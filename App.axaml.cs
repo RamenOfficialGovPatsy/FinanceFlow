@@ -53,7 +53,7 @@ public partial class App : Application
 
         // Сервисы (Бизнес-логика)
         services.AddTransient<IGoalService, GoalService>();
-        // services.AddTransient<IDepositService, DepositService>(); // Добавим позже
+        services.AddTransient<IDepositService, DepositService>(); // Добавим позже
         // services.AddTransient<IAnalyticsService, AnalyticsService>(); // Добавим позже
 
         // ViewModels
