@@ -1,12 +1,9 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 
-namespace FinanceFlow // <-- ВАЖНО: Просто FinanceFlow
+namespace FinanceFlow
 {
     public class DonutChart : Control
     {
@@ -19,33 +16,29 @@ namespace FinanceFlow // <-- ВАЖНО: Просто FinanceFlow
         public static readonly StyledProperty<double> ThicknessProperty =
             AvaloniaProperty.Register<DonutChart, double>(nameof(Thickness), 40);
 
-        public List<double> Values
-        {
-            get => GetValue(ValuesProperty);
-            set => SetValue(ValuesProperty, value);
-        }
-
-        public List<Color> Colors
-        {
-            get => GetValue(ColorsProperty);
-            set => SetValue(ColorsProperty, value);
-        }
-
-        public double Thickness
-        {
-            get => GetValue(ThicknessProperty);
-            set => SetValue(ThicknessProperty, value);
-        }
+        public List<double> Values { get => GetValue(ValuesProperty); set => SetValue(ValuesProperty, value); }
+        public List<Color> Colors { get => GetValue(ColorsProperty); set => SetValue(ColorsProperty, value); }
+        public double Thickness { get => GetValue(ThicknessProperty); set => SetValue(ThicknessProperty, value); }
 
         static DonutChart()
         {
             AffectsRender<DonutChart>(ValuesProperty, ColorsProperty, ThicknessProperty);
+            AffectsMeasure<DonutChart>(ValuesProperty, ThicknessProperty);
         }
+
+        // --- ФИКС КРАША: Ограничиваем размер ---
+        protected override Size MeasureOverride(Size availableSize)
+        {
+            double width = double.IsInfinity(availableSize.Width) ? 200 : availableSize.Width;
+            double height = double.IsInfinity(availableSize.Height) ? 200 : availableSize.Height;
+            double minDim = Math.Min(width, height);
+            return new Size(minDim, minDim);
+        }
+        // ---------------------------------------
 
         public override void Render(DrawingContext context)
         {
-            if (Values == null || !Values.Any() || Colors == null || !Colors.Any())
-                return;
+            if (Values == null || !Values.Any() || Colors == null || !Colors.Any()) return;
 
             double total = Values.Sum();
             if (total <= 0) return;
@@ -61,10 +54,7 @@ namespace FinanceFlow // <-- ВАЖНО: Просто FinanceFlow
             if (innerRadius <= 0) return;
 
             double startAngle = -90;
-
             var borderPen = new Pen(Brushes.White, 1.5);
-
-            // ИСПРАВЛЕНО: FontFamily.Default
             var typeface = new Typeface(FontFamily.Default, FontStyle.Normal, FontWeight.SemiBold);
 
             for (int i = 0; i < Values.Count; i++)
@@ -82,7 +72,6 @@ namespace FinanceFlow // <-- ВАЖНО: Просто FinanceFlow
                 {
                     DrawPercentageLabel(context, center, outerRadius + 15, startAngle, sweepAngle, $"{percentage:F0}%", labelColor, typeface);
                 }
-
                 startAngle += sweepAngle;
             }
         }
@@ -107,7 +96,6 @@ namespace FinanceFlow // <-- ВАЖНО: Просто FinanceFlow
                 ctx.LineTo(outerStart);
                 ctx.EndFigure(true);
             }
-
             context.DrawGeometry(new SolidColorBrush(color), borderPen, geometry);
         }
 
@@ -115,21 +103,8 @@ namespace FinanceFlow // <-- ВАЖНО: Просто FinanceFlow
         {
             double midAngle = startAngle + (sweepAngle / 2);
             double midRad = midAngle * Math.PI / 180;
-
-            Point textPos = new Point(
-                center.X + radius * Math.Cos(midRad),
-                center.Y + radius * Math.Sin(midRad)
-            );
-
-            var formattedText = new FormattedText(
-                text,
-                CultureInfo.CurrentCulture,
-                FlowDirection.LeftToRight,
-                typeface,
-                14,
-                new SolidColorBrush(color)
-            );
-
+            Point textPos = new Point(center.X + radius * Math.Cos(midRad), center.Y + radius * Math.Sin(midRad));
+            var formattedText = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, typeface, 14, new SolidColorBrush(color));
             Point renderPos = new Point(textPos.X - formattedText.Width / 2, textPos.Y - formattedText.Height / 2);
             context.DrawText(formattedText, renderPos);
         }
