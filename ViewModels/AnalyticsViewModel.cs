@@ -1,7 +1,10 @@
+using Avalonia.Media;
 using FinanceFlow.Models;
 using FinanceFlow.Services.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -10,147 +13,107 @@ namespace FinanceFlow.ViewModels
 {
     public class AnalyticsViewModel : ViewModelBase
     {
-        // Сервис может быть null в режиме дизайнера (конструктор без параметров)
         private readonly IAnalyticsService? _analyticsService;
 
-        // --- Свойства статистики ---
+        // Жесткая палитра цветов по ТЗ
+        private readonly string[] _palette = new[]
+        {
+            "#311B92", // Темно-фиолетовый
+            "#065F46", // Темно-зеленый
+            "#B45309", // Темно-оранжевый
+            "#880E4F", // Темно-красный
+            "#1A237E", // Темно-синий
+            "#006064"  // Морская волна
+        };
 
         private int _totalGoals;
-        public int TotalGoals
-        {
-            get => _totalGoals;
-            set => SetProperty(ref _totalGoals, value);
-        }
+        public int TotalGoals { get => _totalGoals; set => SetProperty(ref _totalGoals, value); }
 
         private int _completedGoals;
         public int CompletedGoals
         {
             get => _completedGoals;
-            set
-            {
-                if (SetProperty(ref _completedGoals, value))
-                {
-                    OnPropertyChanged(nameof(CompletedGoalsText));
-                }
-            }
+            set { if (SetProperty(ref _completedGoals, value)) OnPropertyChanged(nameof(CompletedGoalsText)); }
         }
-
-        // Форматированный текст: "3 (37.5%)"
         public string CompletedGoalsText => $"{CompletedGoals} ({GetPercentage(CompletedGoals, TotalGoals)}%)";
 
         private int _inProgressGoals;
-        public int InProgressGoals
-        {
-            get => _inProgressGoals;
-            set => SetProperty(ref _inProgressGoals, value);
-        }
+        public int InProgressGoals { get => _inProgressGoals; set => SetProperty(ref _inProgressGoals, value); }
 
         private int _overdueGoals;
-        public int OverdueGoals
-        {
-            get => _overdueGoals;
-            set => SetProperty(ref _overdueGoals, value);
-        }
+        public int OverdueGoals { get => _overdueGoals; set => SetProperty(ref _overdueGoals, value); }
 
         private decimal _totalTargetAmount;
         public decimal TotalTargetAmount
         {
             get => _totalTargetAmount;
-            set
-            {
-                if (SetProperty(ref _totalTargetAmount, value))
-                {
-                    OnPropertyChanged(nameof(TotalTargetAmountText));
-                }
-            }
+            set { if (SetProperty(ref _totalTargetAmount, value)) OnPropertyChanged(nameof(TotalTargetAmountText)); }
         }
-
         public string TotalTargetAmountText => $"{TotalTargetAmount:N0} ₽";
 
         private decimal _totalCurrentAmount;
         public decimal TotalCurrentAmount
         {
             get => _totalCurrentAmount;
-            set
-            {
-                if (SetProperty(ref _totalCurrentAmount, value))
-                {
-                    OnPropertyChanged(nameof(AccumulatedText));
-                }
-            }
+            set { if (SetProperty(ref _totalCurrentAmount, value)) OnPropertyChanged(nameof(AccumulatedText)); }
         }
 
         private double _averageProgress;
         public double AverageProgress
         {
             get => _averageProgress;
-            set
-            {
-                if (SetProperty(ref _averageProgress, value))
-                {
-                    OnPropertyChanged(nameof(AccumulatedText));
-                }
-            }
+            set { if (SetProperty(ref _averageProgress, value)) OnPropertyChanged(nameof(AccumulatedText)); }
         }
-
-        // Форматированный текст: "215 000 ₽ (44.3%)"
         public string AccumulatedText => $"{TotalCurrentAmount:N0} ₽ ({AverageProgress:F1}%)";
 
-        // --- Коллекции ---
+        private List<double> _chartValues = new();
+        public List<double> ChartValues
+        {
+            get => _chartValues;
+            set => SetProperty(ref _chartValues, value);
+        }
 
-        // Данные для диаграммы
-        public ObservableCollection<CategoryDistributionItem> CategoryDistribution { get; } = new();
+        private List<Color> _chartColors = new();
+        public List<Color> ChartColors
+        {
+            get => _chartColors;
+            set => SetProperty(ref _chartColors, value);
+        }
 
-        // Данные для списка дедлайнов
+        public ObservableCollection<CategoryDistributionItem> CategoryLegend { get; } = new();
         public ObservableCollection<GoalViewModel> UpcomingDeadlines { get; } = new();
-
-        // --- Команды ---
 
         public ICommand GenerateReportCommand { get; }
         public ICommand CloseCommand { get; }
 
-        // --- Конструкторы ---
+        public event Action? RequestClose;
 
-        // 1. Конструктор для Design-time (чтобы XAML-дизайнер не падал и показывал данные)
         public AnalyticsViewModel()
         {
             _analyticsService = null;
-
-            // Инициализируем команды-заглушки (чтобы избежать Warning CS8618)
             GenerateReportCommand = new AsyncRelayCommand(() => Task.CompletedTask);
             CloseCommand = new AsyncRelayCommand(() => Task.CompletedTask);
-
-            // Заполняем моковыми данными для превью
-            TotalGoals = 8;
-            CompletedGoals = 3;
-            InProgressGoals = 4;
-            OverdueGoals = 1;
-            TotalTargetAmount = 485000;
-            TotalCurrentAmount = 215000;
-            AverageProgress = 44.3;
         }
 
-        // 2. Основной конструктор (Runtime)
         public AnalyticsViewModel(IAnalyticsService analyticsService)
         {
             _analyticsService = analyticsService ?? throw new ArgumentNullException(nameof(analyticsService));
 
             GenerateReportCommand = new AsyncRelayCommand(GeneratePdfReportAsync);
-            CloseCommand = new AsyncRelayCommand(() => Task.CompletedTask); // Закрытие обычно обрабатывается View, здесь заглушка
+            CloseCommand = new AsyncRelayCommand(() =>
+            {
+                RequestClose?.Invoke();
+                return Task.CompletedTask;
+            });
 
-            // Запускаем загрузку данных (fire-and-forget для конструктора)
             _ = LoadAnalyticsDataAsync();
         }
-
-        // --- Логика ---
 
         public async Task LoadAnalyticsDataAsync()
         {
             if (_analyticsService == null) return;
 
-            // 1. Получаем общую статистику
             var stats = await _analyticsService.GetGeneralStatisticsAsync();
-
             TotalGoals = stats.TotalGoals;
             CompletedGoals = stats.CompletedGoals;
             InProgressGoals = stats.InProgressGoals;
@@ -159,20 +122,39 @@ namespace FinanceFlow.ViewModels
             TotalCurrentAmount = stats.TotalCurrentAmount;
             AverageProgress = stats.AverageProgress;
 
-            // 2. Получаем распределение по категориям
             var distribution = await _analyticsService.GetCategoryDistributionAsync();
-            CategoryDistribution.Clear();
+
+            CategoryLegend.Clear();
+            var newValues = new List<double>();
+            var newColors = new List<Color>();
+
+            int colorIndex = 0;
             foreach (var item in distribution)
             {
-                CategoryDistribution.Add(item);
+                // Присваиваем цвет сегменту из нашей палитры по очереди
+                string hexColor = _palette[colorIndex % _palette.Length];
+
+                // ВАЖНО: Обновляем цвет в самом элементе, чтобы легенда совпадала с графиком
+                item.Color = hexColor;
+
+                CategoryLegend.Add(item);
+                newValues.Add(item.Percentage);
+
+                if (Color.TryParse(hexColor, out Color color))
+                    newColors.Add(color);
+                else
+                    newColors.Add(Colors.Gray);
+
+                colorIndex++;
             }
 
-            // 3. Получаем дедлайны
+            ChartValues = newValues;
+            ChartColors = newColors;
+
             var deadlines = await _analyticsService.GetUpcomingDeadlinesAsync(3);
             UpcomingDeadlines.Clear();
             foreach (var goal in deadlines)
             {
-                // Оборачиваем модель в ViewModel для удобного отображения
                 UpcomingDeadlines.Add(new GoalViewModel(goal));
             }
         }
@@ -180,14 +162,29 @@ namespace FinanceFlow.ViewModels
         private async Task GeneratePdfReportAsync()
         {
             if (_analyticsService == null) return;
-
-            // Здесь будет логика генерации PDF через QuestPDF
-            // Пока просто создаем запись в БД
-            var reportRecord = await _analyticsService.GenerateReportRecordAsync("custom");
-            Console.WriteLine($"Отчет создан: ID {reportRecord.ReportId}");
+            try
+            {
+                string filePath = await _analyticsService.GeneratePdfReportAsync("custom");
+                if (!string.IsNullOrEmpty(filePath)) OpenUrl(filePath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка генерации отчета: {ex.Message}");
+            }
         }
 
-        // Вспомогательный метод для расчета процентов в строке
+        private void OpenUrl(string url)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+            }
+            catch
+            {
+                if (OperatingSystem.IsLinux()) Process.Start("xdg-open", url);
+            }
+        }
+
         private string GetPercentage(int value, int total)
         {
             if (total == 0) return "0";

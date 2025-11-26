@@ -1,9 +1,5 @@
 using FinanceFlow.Models;
-using Avalonia.Media.Imaging; // Для работы с картинками
-using System;
-using System.ComponentModel;
-using System.IO; // Для проверки существования файла
-using System.Runtime.CompilerServices;
+using Avalonia.Media.Imaging;
 
 namespace FinanceFlow.ViewModels
 {
@@ -13,6 +9,10 @@ namespace FinanceFlow.ViewModels
         private decimal _currentAmount;
         private bool _isCompleted;
         private Bitmap? _goalImage; // Храним загруженную картинку
+
+        // --- ФЛАГИ ЗАЩИТЫ ОТ РЕКУРСИИ (Layout Cycle Fix) ---
+        private bool _isSettingStartDate;
+        private bool _isSettingEndDate;
 
         // Конструктор
         public GoalViewModel(Goal goal)
@@ -108,22 +108,36 @@ namespace FinanceFlow.ViewModels
             }
         }
 
-        // --- Даты ---
+        // --- Даты (С ФИКСОМ РЕКУРСИИ) ---
         public DateTime StartDate
         {
             get => _goal.StartDate;
             set
             {
-                if (_goal.StartDate != value)
+                // Если мы уже меняем дату или значение не изменилось - выходим
+                if (_isSettingStartDate || _goal.StartDate == value) return;
+
+                try
                 {
+                    _isSettingStartDate = true; // Блокируем повторный вход
                     _goal.StartDate = value;
+
+                    // Уведомляем об изменении самой даты
                     OnPropertyChanged();
-                    OnPropertyChanged(nameof(DaysPassed));
-                    OnPropertyChanged(nameof(TotalDays));
-                    OnPropertyChanged(nameof(DaysLeft));
-                    OnPropertyChanged(nameof(DaysLeftText));
-                    OnPropertyChanged(nameof(DaysLeftColor));
-                    OnPropertyChanged(nameof(IsOverdue));
+
+                    // Уведомляем зависимые свойства ПАЧКОЙ
+                    OnMultiplePropertiesChanged(
+                        nameof(DaysPassed),
+                        nameof(TotalDays),
+                        nameof(DaysLeft),
+                        nameof(DaysLeftText),
+                        nameof(DaysLeftColor),
+                        nameof(IsOverdue)
+                    );
+                }
+                finally
+                {
+                    _isSettingStartDate = false; // Снимаем блокировку
                 }
             }
         }
@@ -133,16 +147,30 @@ namespace FinanceFlow.ViewModels
             get => _goal.EndDate;
             set
             {
-                if (_goal.EndDate != value)
+                // Если мы уже меняем дату или значение не изменилось - выходим
+                if (_isSettingEndDate || _goal.EndDate == value) return;
+
+                try
                 {
+                    _isSettingEndDate = true; // Блокируем повторный вход
                     _goal.EndDate = value;
+
+                    // Уведомляем об изменении самой даты
                     OnPropertyChanged();
-                    OnPropertyChanged(nameof(DaysLeft));
-                    OnPropertyChanged(nameof(DaysLeftText));
-                    OnPropertyChanged(nameof(DaysLeftColor));
-                    OnPropertyChanged(nameof(TotalDays));
-                    OnPropertyChanged(nameof(IsOverdue));
-                    OnPropertyChanged(nameof(TimeProgressPercentage));
+
+                    // Уведомляем зависимые свойства ПАЧКОЙ
+                    OnMultiplePropertiesChanged(
+                        nameof(DaysLeft),
+                        nameof(DaysLeftText),
+                        nameof(DaysLeftColor),
+                        nameof(TotalDays),
+                        nameof(IsOverdue),
+                        nameof(TimeProgressPercentage)
+                    );
+                }
+                finally
+                {
+                    _isSettingEndDate = false; // Снимаем блокировку
                 }
             }
         }
@@ -255,13 +283,11 @@ namespace FinanceFlow.ViewModels
                 {
                     _goal.Description = value;
                     OnPropertyChanged();
-                    // Уведомляем UI, что наличие описания изменилось
                     OnPropertyChanged(nameof(HasDescription));
                 }
             }
         }
 
-        // Свойство-флаг для UI: есть ли описание?
         public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
 
         // --- Изображение (с логикой загрузки) ---
@@ -274,14 +300,11 @@ namespace FinanceFlow.ViewModels
                 {
                     _goal.ImagePath = value;
                     OnPropertyChanged();
-
-                    // При изменении пути пытаемся перезагрузить картинку
                     LoadImage();
                 }
             }
         }
 
-        // Bitmap для отображения в Image контроле
         public Bitmap? GoalImage
         {
             get => _goalImage;
@@ -294,23 +317,17 @@ namespace FinanceFlow.ViewModels
             }
         }
 
-        // Свойство-флаг для UI: есть ли картинка?
         public bool HasImage => GoalImage != null;
 
-        // Метод загрузки картинки с диска
         private void LoadImage()
         {
             try
             {
-                // Если путь пустой или файл не существует - сбрасываем картинку
                 if (string.IsNullOrEmpty(_goal.ImagePath) || !File.Exists(_goal.ImagePath))
                 {
                     GoalImage = null;
                     return;
                 }
-
-                // Загружаем картинку
-                // Используем FileStream, чтобы не блокировать файл, если вдруг захотим его удалить
                 using (var stream = File.OpenRead(_goal.ImagePath))
                 {
                     GoalImage = new Bitmap(stream);
@@ -318,7 +335,6 @@ namespace FinanceFlow.ViewModels
             }
             catch (Exception)
             {
-                // Если файл битый или ошибка доступа - просто не показываем картинку
                 GoalImage = null;
             }
         }

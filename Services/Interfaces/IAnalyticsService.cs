@@ -6,20 +6,11 @@ namespace FinanceFlow.Services.Interfaces
 {
     public interface IAnalyticsService
     {
-        // 1. Получение общей сводки (всего целей, выполнено, суммы и т.д.)
         Task<AnalyticsSummaryDto> GetGeneralStatisticsAsync();
-
-        // 2. Получение данных для круговой диаграммы (распределение по категориям)
         Task<List<CategoryDistributionItem>> GetCategoryDistributionAsync();
-
-        // 3. Получение списка ближайших дедлайнов (по умолчанию 3 штуки)
         Task<List<Goal>> GetUpcomingDeadlinesAsync(int count = 3);
-
-        // 4. Генерация и сохранение записи отчета в БД
-        Task<AnalyticsReport> GenerateReportRecordAsync(string reportType);
+        Task<string> GeneratePdfReportAsync(string reportType);
     }
-
-    // --- DTO классы для передачи данных ---
 
     public class AnalyticsSummaryDto
     {
@@ -35,7 +26,8 @@ namespace FinanceFlow.Services.Interfaces
     public class CategoryDistributionItem
     {
         public string CategoryName { get; set; } = string.Empty;
-        public string Color { get; set; } = string.Empty; // HEX цвет
+        public string Icon { get; set; } = string.Empty; // <-- ДОБАВЛЕНО
+        public string Color { get; set; } = string.Empty;
         public int GoalsCount { get; set; }
         public double Percentage { get; set; }
     }

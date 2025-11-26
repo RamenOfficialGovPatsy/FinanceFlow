@@ -8,6 +8,7 @@ using FinanceFlow.ViewModels;
 using HotAvalonia;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using QuestPDF.Infrastructure; // Важно для лицензии
 
 namespace FinanceFlow;
 
@@ -20,6 +21,9 @@ public partial class App : Application
     {
         AvaloniaXamlLoader.Load(this);
         this.EnableHotReload(); // Горячая перезагрузка
+
+        // Установка бесплатной лицензии для QuestPDF
+        QuestPDF.Settings.License = LicenseType.Community;
     }
 
     public override void OnFrameworkInitializationCompleted()
@@ -48,16 +52,18 @@ public partial class App : Application
         // База данных (Контекст)
         services.AddDbContext<AppDbContext>();
 
-        // Логирование (нужно для GoalService)
+        // Логирование
         services.AddLogging(builder => builder.AddConsole());
 
-        // Сервисы (Бизнес-логика)
+        // --- СЕРВИСЫ (Бизнес-логика) ---
         services.AddTransient<IGoalService, GoalService>();
-        services.AddTransient<IDepositService, DepositService>(); // Добавим позже
-        // services.AddTransient<IAnalyticsService, AnalyticsService>(); // Добавим позже
+        services.AddTransient<IDepositService, DepositService>();
+        services.AddTransient<IAnalyticsService, AnalyticsService>(); // Раскомментировано
 
-        // ViewModels
+        // --- VIEWMODELS ---
         services.AddTransient<MainWindowViewModel>();
-        // services.AddTransient<AddEditGoalViewModel>(); // Добавим позже
+        services.AddTransient<AddEditGoalViewModel>(); // Раскомментировано
+        services.AddTransient<AnalyticsViewModel>();   // Добавлено для аналитики
+        services.AddTransient<DepositViewModel>();     // Добавлено для пополнений
     }
 }

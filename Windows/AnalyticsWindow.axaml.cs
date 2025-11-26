@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using FinanceFlow.ViewModels;
 
 namespace FinanceFlow.Windows
 {
@@ -8,6 +9,14 @@ namespace FinanceFlow.Windows
         public AnalyticsWindow()
         {
             InitializeComponent();
+
+            this.DataContextChanged += (s, e) =>
+            {
+                if (DataContext is AnalyticsViewModel vm)
+                {
+                    vm.RequestClose += () => this.Close();
+                }
+            };
         }
 
         private void InitializeComponent()
