@@ -41,10 +41,12 @@
                 <StackPanel Spacing="8">
                     <TextBlock Classes="Label" Text="Сумма пополнения"/>
                     <Grid ColumnDefinitions="*, Auto">
-                        <NumericUpDown Value="{Binding Amount, Mode=TwoWay}" 
-                                       FormatString="N0" Minimum="1" ParsingNumberStyle="Integer" 
+                        <NumericUpDown Value="{Binding Amount, Mode=TwoWay, TargetNullValue=0, FallbackValue=0}" 
+                                       FormatString="N0" ParsingNumberStyle="Integer" 
                                        HorizontalAlignment="Stretch"/>
-                        <TextBlock Grid.Column="1" Text="₽" FontSize="16" VerticalAlignment="Center" Margin="12,0,0,0" Foreground="{StaticResource AppTextSecondary}"/>
+                        <TextBlock Grid.Column="1" Text="₽" FontSize="16" 
+                        VerticalAlignment="Center" Margin="12,0,0,0" 
+                        Foreground="{StaticResource AppTextSecondary}"/>
                     </Grid>
                 </StackPanel>
 
@@ -58,8 +60,9 @@
 
                 <StackPanel Spacing="8">
                     <TextBlock Classes="Label" Text="Комментарий"/>
-                    <TextBox Text="{Binding Comment, Mode=TwoWay}" 
-                            ToolTip.Tip="Максимальная длина - 200 символов"
+                    <TextBox Text="{Binding Comment, Mode=TwoWay}"
+                             MaxLength="200" 
+                             ToolTip.Tip="Максимальная длина - 200 символов"
                              Watermark="Например: Аванс за ноябрь" 
                              HorizontalAlignment="Stretch"/>
                 </StackPanel>
@@ -75,7 +78,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Path Data="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" 
                                   Fill="#EF4444" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
-                            <TextBlock Text="Закрыть" Foreground="{StaticResource AppTextSecondary}" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
+                            <TextBlock Text="Закрыть" Foreground="#EF4444" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
                         </StackPanel>
                     </Button>
                     

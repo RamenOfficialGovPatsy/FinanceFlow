@@ -3,7 +3,6 @@ using FinanceFlow.Models;
 using FinanceFlow.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System; // Добавлено для Console
 
 namespace FinanceFlow.Services.Implementations
 {
@@ -22,25 +21,11 @@ namespace FinanceFlow.Services.Implementations
         {
             try
             {
-                bool isEnabled = AppContext.TryGetSwitch("Npgsql.EnableLegacyTimestampBehavior", out bool enabled) && enabled;
-                Console.WriteLine($"=== SWITCH STATUS: {isEnabled} ==="); // Должно быть TRUE
-
                 var goals = await _context.Goals
                     .Include(g => g.GoalCategory)
                     .Include(g => g.Deposits)
                     .OrderByDescending(g => g.CreatedAt)
                     .ToListAsync();
-
-                // === ДИАГНОСТИКА (УБРАТЬ ПОТОМ) ===
-                Console.WriteLine("=== ДИАГНОСТИКА ДАТ ИЗ БАЗЫ ===");
-                foreach (var goal in goals)
-                {
-                    Console.WriteLine($"{goal.Title}:");
-                    Console.WriteLine($"  StartDate: {goal.StartDate} (Kind: {goal.StartDate.Kind})");
-                    Console.WriteLine($"  EndDate: {goal.EndDate} (Kind: {goal.EndDate.Kind})");
-                }
-                Console.WriteLine("===============================");
-                // ===================================
 
                 return goals;
             }

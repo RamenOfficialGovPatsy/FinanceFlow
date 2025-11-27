@@ -1,12 +1,9 @@
 using FinanceFlow.Models;
 using FinanceFlow.Services.Interfaces;
 using Avalonia.Media.Imaging;
-using System;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Input;
-using System.IO;
+using Avalonia.Data;
 
 namespace FinanceFlow.ViewModels
 {
@@ -16,12 +13,19 @@ namespace FinanceFlow.ViewModels
         private readonly bool _isEditMode;
         private readonly int _editingGoalId;
 
+        // Публичный метод для вызова ошибки из View (Code-behind)
+        public void TriggerError(string message, string title) => ShowError(message, title);
+
         public event Action? RequestClose;
 
         public string WindowTitle => _isEditMode ? "Редактирование цели" : "Новая цель";
 
         private string _title = string.Empty;
-        public string Title { get => _title; set => SetProperty(ref _title, value); }
+        public string Title
+        {
+            get => _title;
+            set => SetProperty(ref _title, value);
+        }
 
         private GoalCategory? _selectedCategory;
         public GoalCategory? SelectedCategory { get => _selectedCategory; set => SetProperty(ref _selectedCategory, value); }
@@ -29,11 +33,19 @@ namespace FinanceFlow.ViewModels
         private PriorityItem? _selectedPriority;
         public PriorityItem? SelectedPriority { get => _selectedPriority; set => SetProperty(ref _selectedPriority, value); }
 
-        private decimal _targetAmount;
-        public decimal TargetAmount { get => _targetAmount; set => SetProperty(ref _targetAmount, value); }
+        private decimal? _targetAmount = 1;
+        public decimal? TargetAmount
+        {
+            get => _targetAmount;
+            set => SetProperty(ref _targetAmount, value);
+        }
 
-        private decimal _currentAmount;
-        public decimal CurrentAmount { get => _currentAmount; set => SetProperty(ref _currentAmount, value); }
+        private decimal? _currentAmount;
+        public decimal? CurrentAmount
+        {
+            get => _currentAmount;
+            set => SetProperty(ref _currentAmount, value);
+        }
 
         private DateTime _startDate = DateTime.Today;
         public DateTime StartDate { get => _startDate; set => SetProperty(ref _startDate, value); }
@@ -90,7 +102,7 @@ namespace FinanceFlow.ViewModels
             {
                 GoalImage = null;
                 ImagePath = null;
-                OnPropertyChanged(nameof(HasImage)); // Принудительно обновляем UI
+                OnPropertyChanged(nameof(HasImage));
                 return Task.CompletedTask;
             });
         }
@@ -116,18 +128,11 @@ namespace FinanceFlow.ViewModels
 
         private void FillFormData(Goal goal)
         {
-            Console.WriteLine($"FillFormData: Title={goal.Title}, EndDate={goal.EndDate}, Kind={goal.EndDate.Kind}");
-
             Title = goal.Title;
             TargetAmount = goal.TargetAmount;
             CurrentAmount = goal.CurrentAmount;
-
-            // --- FIX: Защита от пустых дат (0001-01-01) ---
-            // Если дата сломана, ставим дефолтную, чтобы форма не глючила
             StartDate = goal.StartDate == DateTime.MinValue ? DateTime.Today : goal.StartDate;
             EndDate = goal.EndDate == DateTime.MinValue ? DateTime.Today.AddMonths(3) : goal.EndDate;
-            // ----------------------------------------------
-
             Description = goal.Description ?? string.Empty;
             SelectedCategory = Categories.FirstOrDefault(c => c.CategoryId == goal.CategoryId);
             SelectedPriority = Priorities.FirstOrDefault(p => p.Value == goal.Priority);
@@ -151,17 +156,35 @@ namespace FinanceFlow.ViewModels
 
         private async Task SaveGoalAsync()
         {
-            if (!Validate()) return;
+            var (isValid, error, title) = Validate();
+
+            if (!isValid)
+            {
+                // ИСПРАВЛЕНО: Передаем заголовок ошибки
+                ShowError(error, title);
+                return;
+            }
+
             try
             {
+                decimal current = CurrentAmount ?? 0;
+                decimal target = TargetAmount ?? 0;
+
+                // 1. Проверка бизнес-правила (Суммы) перед созданием объекта
+                if (current > target)
+                {
+                    ShowError($"Текущая сумма ({current:N0}) не может быть больше целевой ({target:N0}).", "Ошибка суммы");
+                    return;
+                }
+
                 var goal = new Goal
                 {
                     GoalId = _isEditMode ? _editingGoalId : 0,
                     Title = Title,
                     CategoryId = SelectedCategory!.CategoryId,
                     Priority = SelectedPriority!.Value,
-                    TargetAmount = TargetAmount,
-                    CurrentAmount = CurrentAmount,
+                    TargetAmount = target,
+                    CurrentAmount = current,
                     StartDate = StartDate,
                     EndDate = EndDate,
                     Description = Description,
@@ -169,23 +192,43 @@ namespace FinanceFlow.ViewModels
                 };
 
                 (bool success, string message) result;
-                if (_isEditMode) result = await _goalService.UpdateGoalAsync(goal);
-                else result = await _goalService.AddGoalAsync(goal);
 
-                if (result.success) RequestClose?.Invoke();
-                else Console.WriteLine($"Ошибка: {result.message}");
+                if (_isEditMode)
+                    result = await _goalService.UpdateGoalAsync(goal);
+                else
+                    result = await _goalService.AddGoalAsync(goal);
+
+                if (result.success)
+                {
+                    RequestClose?.Invoke();
+                }
+                else
+                {
+                    if (result.message.Contains("CK_Goals_Amounts"))
+                        ShowError("Текущая сумма превышает целевую.", "Ошибка данных");
+                    else
+                        ShowError(result.message, "Ошибка сохранения");
+                }
             }
-            catch (Exception ex) { Console.WriteLine($"Критическая ошибка: {ex.Message}"); }
+            catch (Exception ex)
+            {
+                ShowError($"Критическая ошибка: {ex.Message}", "Сбой программы");
+            }
         }
 
-        private bool Validate()
+        private (bool isValid, string error, string title) Validate()
         {
-            if (string.IsNullOrWhiteSpace(Title)) return false;
-            if (TargetAmount <= 0) return false;
-            if (SelectedCategory == null) return false;
-            if (SelectedPriority == null) return false;
-            if (EndDate <= StartDate) return false;
-            return true;
+            if (string.IsNullOrWhiteSpace(Title))
+                return (false, "Введите название цели.", "Название не указано");
+
+            // Проверяем: если null или <= 0
+            if ((TargetAmount ?? 0) <= 0)
+                return (false, "Целевая сумма должна быть больше 0.", "Некорректная сумма");
+
+            if (EndDate.Date < StartDate.Date)
+                return (false, "Дата окончания не может быть раньше даты начала.", "Ошибка в датах");
+
+            return (true, string.Empty, string.Empty);
         }
     }
 

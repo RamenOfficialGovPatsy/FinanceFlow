@@ -52,26 +52,25 @@ namespace FinanceFlow.Views
                 {
                     var fileInfo = new FileInfo(filePath);
 
-                    // 1. ПРОВЕРКА ФОРМАТА (РАСШИРЕНИЯ)
-                    var extension = fileInfo.Extension.ToLowerInvariant(); // .jpg
-                    if (!_allowedExtensions.Contains(extension))
-                    {
-                        Console.WriteLine($"[Ошибка] Неподдерживаемый формат: {extension}. Разрешены: JPG, PNG, BMP, WEBP.");
-                        // Здесь потом будет MessageBox.Show("Неверный формат...");
-                        return;
-                    }
-
-                    // 2. ПРОВЕРКА РАЗМЕРА
-                    if (fileInfo.Length > MaxFileSize)
-                    {
-                        Console.WriteLine($"[Ошибка] Файл слишком большой: {fileInfo.Length / 1024 / 1024} МБ. Лимит: 15 МБ.");
-                        // Здесь потом будет MessageBox.Show("Файл слишком большой...");
-                        return;
-                    }
-
-                    // Если все проверки пройдены - передаем во ViewModel
+                    // Получаем доступ к ViewModel
                     if (DataContext is AddEditGoalViewModel vm)
                     {
+                        // 1. ПРОВЕРКА ФОРМАТА
+                        var extension = fileInfo.Extension.ToLowerInvariant();
+                        if (!_allowedExtensions.Contains(extension))
+                        {
+                            vm.TriggerError("Неподдерживаемый формат файла.\nРазрешены: JPG, PNG, BMP, WEBP.", "Ошибка файла");
+                            return;
+                        }
+
+                        // 2. ПРОВЕРКА РАЗМЕРА
+                        if (fileInfo.Length > MaxFileSize)
+                        {
+                            vm.TriggerError($"Файл слишком большой ({fileInfo.Length / 1024 / 1024} МБ).\nМаксимальный размер: 15 МБ.", "Ошибка размера");
+                            return;
+                        }
+
+                        // Если все ок - устанавливаем картинку
                         vm.SetImage(filePath);
                         Console.WriteLine($"[Успех] Изображение загружено: {fileInfo.Name}");
                     }

@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using FinanceFlow.ViewModels;
@@ -13,33 +12,27 @@ namespace FinanceFlow.Windows
 
             this.DataContextChanged += (s, e) =>
             {
+                // 1. Подписка на закрытие
                 if (DataContext is AddEditGoalViewModel vm)
                 {
                     vm.RequestClose += () => this.Close();
                 }
+
+                // 2. Подписка на уведомления/ошибки
+                if (DataContext is ViewModelBase baseVm)
+                {
+                    baseVm.RequestNotification += (title, message) =>
+                    {
+                        var msgBox = new MessageBoxWindow(title, message);
+                        msgBox.ShowDialog(this);
+                    };
+                }
             };
-            //  DataContext = new AddEditGoalViewModel(isEditMode: true); // Режим редактирования
         }
 
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
         }
-
-        // Обработчик кнопки "Отмена"
-        /*
-        private void CancelButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
-        {
-            this.Close();
-        }
-        */
-
-        // Обработчик кнопки "Сохранить" 
-        /*
-        private void SaveButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
-        {
-            this.Close();
-        }
-        */
     }
 }

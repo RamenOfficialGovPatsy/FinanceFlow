@@ -233,7 +233,7 @@
                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                     <TextBlock Text="❌" FontFamily="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, System" FontSize="14" Foreground="#EF4444" VerticalAlignment="Center"/>
                     <TextBlock Text="Закрыть" 
-                               Foreground="{StaticResource AppTextSecondary}" 
+                               Foreground="#EF4444" 
                                FontWeight="SemiBold" 
                                VerticalAlignment="Center"/>
                 </StackPanel>

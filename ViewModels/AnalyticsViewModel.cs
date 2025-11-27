@@ -1,12 +1,7 @@
 using Avalonia.Media;
-using FinanceFlow.Models;
 using FinanceFlow.Services.Interfaces;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace FinanceFlow.ViewModels
@@ -15,15 +10,50 @@ namespace FinanceFlow.ViewModels
     {
         private readonly IAnalyticsService? _analyticsService;
 
-        // Жесткая палитра цветов по ТЗ
+        // Фиксированная палитра из 30 насыщенных темных цветов
         private readonly string[] _palette = new[]
         {
-            "#311B92", // Темно-фиолетовый
-            "#065F46", // Темно-зеленый
-            "#B45309", // Темно-оранжевый
-            "#880E4F", // Темно-красный
-            "#1A237E", // Темно-синий
-            "#006064"  // Морская волна
+            // --- Красные и Бордовые ---
+            "#B71C1C", // Red 900 (Глубокий красный)
+            "#D50000", // Red A700 (Яркий насыщенный красный)
+            "#880E4F", // Pink 900 (Темно-малиновый)
+            "#C2185B", // Pink 700 (Насыщенный розовый)
+            "#8B0000", // DarkRed (Классический темно-красный)
+
+            // --- Фиолетовые и Индиго ---
+            "#4A148C", // Purple 900 (Глубокий фиолетовый)
+            "#7B1FA2", // Purple 700 (Насыщенный фиолетовый)
+            "#311B92", // Deep Purple 900 (Темный ультрамарин)
+            "#6200EA", // Deep Purple A700 (Яркий индиго)
+            "#1A237E", // Indigo 900 (Темно-синий индиго)
+            "#304FFE", // Indigo A700 (Яркий электрик)
+
+            // --- Синие и Лазурные ---
+            "#0D47A1", // Blue 900 (Темно-синий)
+            "#1565C0", // Blue 800 (Насыщенный синий)
+            "#01579B", // Light Blue 900 (Глубокий голубой)
+            "#0277BD", // Light Blue 800 (Морской синий)
+            "#006064", // Cyan 900 (Темная морская волна)
+
+            // --- Бирюзовые и Тиловые ---
+            "#004D40", // Teal 900 (Глубокий тиловый)
+            "#00695C", // Teal 800 (Насыщенный тиловый)
+            "#00BFA5", // Teal A700 (Яркая бирюза)
+            "#1DE9B6", // Teal A400 (Неоновая бирюза - акцент)
+
+            // --- Зеленые и Изумрудные ---
+            "#1B5E20", // Green 900 (Лесной зеленый)
+            "#2E7D32", // Green 800 (Травяной зеленый)
+            "#00C853", // Green A700 (Яркий изумруд)
+            "#33691E", // Light Green 900 (Оливково-зеленый)
+
+            // --- Оранжевые и Янтарные (Глубокие) ---
+            "#BF360C", // Deep Orange 900 (Кирпичный)
+            "#D84315", // Deep Orange 800 (Насыщенный рыжий)
+            "#E65100", // Orange 900 (Темно-оранжевый)
+            "#FF6D00", // Orange A700 (Яркий оранжевый)
+            "#F57F17", // Yellow 900 (Темно-янтарный/Золотой)
+            "#FFD600"  // Yellow A700 (Насыщенный золотой)
         };
 
         private int _totalGoals;
@@ -124,6 +154,9 @@ namespace FinanceFlow.ViewModels
 
             var distribution = await _analyticsService.GetCategoryDistributionAsync();
 
+            var random = new Random();
+            var shuffledPalette = _palette.OrderBy(x => random.Next()).ToArray();
+
             CategoryLegend.Clear();
             var newValues = new List<double>();
             var newColors = new List<Color>();
@@ -132,7 +165,7 @@ namespace FinanceFlow.ViewModels
             foreach (var item in distribution)
             {
                 // Присваиваем цвет сегменту из нашей палитры по очереди
-                string hexColor = _palette[colorIndex % _palette.Length];
+                string hexColor = shuffledPalette[colorIndex % shuffledPalette.Length];
 
                 // ВАЖНО: Обновляем цвет в самом элементе, чтобы легенда совпадала с графиком
                 item.Color = hexColor;

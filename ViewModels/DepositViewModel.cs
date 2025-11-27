@@ -1,9 +1,6 @@
 using FinanceFlow.Models;
 using FinanceFlow.Services.Interfaces;
-using System;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace FinanceFlow.ViewModels
@@ -23,8 +20,8 @@ namespace FinanceFlow.ViewModels
 
         // --- Свойства ввода ---
 
-        private decimal _amount = 1000;
-        public decimal Amount
+        private decimal? _amount = 1000;
+        public decimal? Amount
         {
             get => _amount;
             set => SetProperty(ref _amount, value);
@@ -186,50 +183,66 @@ namespace FinanceFlow.ViewModels
 
         private async Task SaveAsync()
         {
-            if (Amount <= 0) return;
+            decimal valueToSave = Amount ?? 0;
 
-            var deposit = new GoalDeposit
+            // 1. Валидация
+            if (valueToSave <= 0)
             {
-                GoalId = _goal.GoalId,
-                Amount = Amount,
-                DepositType = ConvertTypeToKey(SelectedDepositType),
-                Comment = Comment,
-                DepositDate = DateTime.Now
-            };
-
-            bool success;
-            string message;
-
-            if (IsEditMode)
-            {
-                deposit.DepositId = _editingDepositId;
-                (success, message) = await _depositService.UpdateDepositAsync(deposit);
-            }
-            else
-            {
-                (success, message) = await _depositService.AddDepositAsync(deposit);
+                ShowError("Сумма пополнения должна быть больше 0.");
+                return;
             }
 
-            if (success)
+            try
             {
-                await ReloadGoalFromDb();
-                await LoadHistoryAsync();
-                OnProgressUpdated?.Invoke();
+                var deposit = new GoalDeposit
+                {
+                    GoalId = _goal.GoalId,
+                    Amount = valueToSave,
+                    DepositType = ConvertTypeToKey(SelectedDepositType),
+                    Comment = Comment,
+                    DepositDate = DateTime.Now
+                };
+
+                bool success;
+                string message;
 
                 if (IsEditMode)
                 {
-                    ResetForm();
-                    Console.WriteLine("Изменения сохранены");
+                    deposit.DepositId = _editingDepositId;
+                    (success, message) = await _depositService.UpdateDepositAsync(deposit);
                 }
                 else
                 {
-                    RequestClose?.Invoke();
-                    Console.WriteLine("Пополнение добавлено");
+                    (success, message) = await _depositService.AddDepositAsync(deposit);
+                }
+
+                if (success)
+                {
+                    await ReloadGoalFromDb();
+                    await LoadHistoryAsync();
+                    OnProgressUpdated?.Invoke();
+
+                    if (IsEditMode)
+                    {
+                        ResetForm();
+                        ShowSuccess("Запись успешно обновлена."); // Опционально, можно просто молча
+                    }
+                    else
+                    {
+                        RequestClose?.Invoke();
+                        // ShowSuccess("Пополнение успешно добавлено."); // Обычно окно просто закрывается
+                    }
+                }
+                else
+                {
+                    // Ошибка от сервиса (логики)
+                    ShowError($"Не удалось выполнить операцию: {message}");
                 }
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine($"Ошибка: {message}");
+                // Критическая ошибка (например, БД отключилась)
+                ShowError($"Критическая ошибка: {ex.Message}");
             }
         }
 
