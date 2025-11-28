@@ -1,4 +1,4 @@
-# .NET/Visual Studio/Rider
+# .NET/Visual Studio
 *.user
 *.suo
 *.sln.doc
@@ -26,8 +26,10 @@ packages/
 .DS_Store
 Thumbs.db
 
-# Локальные файлы PostgreSQL (если используются)
+# Локальные файлы PostgreSQL
 *.pgpass
 
+#DB
+.session
+
 PicForGoals/
-Assets/
