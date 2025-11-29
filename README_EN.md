@@ -6,7 +6,7 @@
 ---
 
 <p align="center">
-  <a href="README_RU.md">Читать на русском 🇷🇺</a>
+  <a href="README.md">Читать на русском 🇷🇺</a>
 </p>
 
 **FinanceFlow** is a professional desktop financial goals tracker. The application is designed for those who want to visualize their savings, track progress in real-time, and get detailed analytics in PDF format.
