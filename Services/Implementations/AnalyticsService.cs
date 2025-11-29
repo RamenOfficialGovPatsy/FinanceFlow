@@ -108,7 +108,7 @@ namespace FinanceFlow.Services.Implementations
 
             // Создаю папку для отчетов в Документах, если её нет
             string docsFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string reportsFolder = Path.Combine(docsFolder, "FinanceFlow-Отчеты");
+            string reportsFolder = Path.Combine(docsFolder, "FinanceFlow-Reports");
 
             if (!Directory.Exists(reportsFolder))
             {

@@ -41,10 +41,10 @@ Unlike regular Excel spreadsheets, FinanceFlow provides a modern graphical inter
 The project is built on a modern technology stack. Click on a technology to go to the official download site.
 
 - **Language:** [C# / .NET 8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) — Main platform.
-- **UI Framework:** [AvaloniaUI 11.3.8](https://avaloniaui.net/) — Cross-platform XAML (MVVM architecture).
+- **UI Framework:** [AvaloniaUI 11.3.8](https://avaloniaui.net/) — Cross-platform XAML.
 - **Database:** [PostgreSQL 16+](https://www.postgresql.org/download/) — Reliable relational DBMS.
 - **ORM:** [Entity Framework Core 8](https://learn.microsoft.com/en-us/ef/core/) — Data access through objects.
-- **PDF:** [QuestPDF](https://www.questpdf.com/) — Document generation (Community License).
+- **PDF:** [QuestPDF](https://www.questpdf.com/) — Document generation.
 
 ---
 
@@ -98,10 +98,8 @@ If you prefer to configure the database manually (via pgAdmin or psql):
 
 #### **Option A: Ready EXE (Without .NET Installation)**
 
-Ideal for demonstration on a computer without developer tools.
-
 1.  Go to the **[Releases](../../releases)** section of this repository.
-2.  Download the `FinanceFlow_Release.zip` archive.
+2.  Download the `FinanceFlow_Release_v1.0.zip` archive.
 3.  Run `FinanceFlow.exe`.
 
 #### **Option B: Run from Source Code**
