@@ -5,6 +5,10 @@
 .vs/
 .idea/
 
+# IDE и настройки
+.vscode/
+.config/
+
 # Артефакты сборки
 bin/
 obj/
