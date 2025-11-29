@@ -8,13 +8,12 @@ using FinanceFlow.ViewModels;
 using HotAvalonia;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using QuestPDF.Infrastructure; // Важно для лицензии
+using QuestPDF.Infrastructure;
 
 namespace FinanceFlow;
 
 public partial class App : Application
 {
-    // Контейнер для сервисов
     public IServiceProvider? Services { get; private set; }
 
     public override void Initialize()
@@ -28,14 +27,14 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        // 1. Настраиваем DI (Dependency Injection)
+        //  Настройка DI (Dependency Injection)
         var serviceCollection = new ServiceCollection();
         ConfigureServices(serviceCollection);
         Services = serviceCollection.BuildServiceProvider();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            // 2. Получаем ViewModel из контейнера (он сам подставит нужные сервисы)
+            //  Получаю ViewModel из контейнера
             var mainViewModel = Services.GetRequiredService<MainWindowViewModel>();
 
             desktop.MainWindow = new MainWindow
@@ -49,21 +48,18 @@ public partial class App : Application
 
     private void ConfigureServices(IServiceCollection services)
     {
-        // База данных (Контекст)
         services.AddDbContext<AppDbContext>();
 
         // Логирование
         services.AddLogging(builder => builder.AddConsole());
 
-        // --- СЕРВИСЫ (Бизнес-логика) ---
         services.AddTransient<IGoalService, GoalService>();
         services.AddTransient<IDepositService, DepositService>();
-        services.AddTransient<IAnalyticsService, AnalyticsService>(); // Раскомментировано
+        services.AddTransient<IAnalyticsService, AnalyticsService>();
 
-        // --- VIEWMODELS ---
         services.AddTransient<MainWindowViewModel>();
-        services.AddTransient<AddEditGoalViewModel>(); // Раскомментировано
-        services.AddTransient<AnalyticsViewModel>();   // Добавлено для аналитики
-        services.AddTransient<DepositViewModel>();     // Добавлено для пополнений
+        services.AddTransient<AddEditGoalViewModel>();
+        services.AddTransient<AnalyticsViewModel>();
+        services.AddTransient<DepositViewModel>();
     }
 }

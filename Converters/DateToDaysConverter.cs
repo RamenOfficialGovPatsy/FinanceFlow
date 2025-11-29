@@ -1,6 +1,5 @@
 using Avalonia.Data.Converters;
 using Avalonia.Media;
-using System;
 using System.Globalization;
 
 namespace FinanceFlow.Converters
@@ -13,14 +12,11 @@ namespace FinanceFlow.Converters
             {
                 string mode = parameter as string ?? "Text";
 
-                // ЗАЩИТА: Если дата "пустая" (0001-01-01)
+                // Защита от неинициализированных дат (DateTime.MinValue)
                 if (date == DateTime.MinValue)
                 {
-                    // Если режим цвета - возвращаем прозрачный/серый (чтобы не мелькало красным)
+                    // Возвращаем нейтральный цвет или пустую строку вместо ошибки
                     if (mode == "Color") return SolidColorBrush.Parse("#6B7280");
-
-                    // Если режим текста - возвращаем пустую строку или "..."
-                    // Это скроет надпись "Ошибка даты", пока не подгрузится нормальная дата
                     return string.Empty;
                 }
 
@@ -31,10 +27,10 @@ namespace FinanceFlow.Converters
                 {
                     return diff switch
                     {
-                        < 0 => SolidColorBrush.Parse("#EF4444"),
-                        <= 7 => SolidColorBrush.Parse("#EF4444"),
-                        <= 30 => SolidColorBrush.Parse("#F59E0B"),
-                        _ => SolidColorBrush.Parse("#10B981")
+                        < 0 => SolidColorBrush.Parse("#EF4444"), // Красный: просрочено
+                        <= 7 => SolidColorBrush.Parse("#EF4444"), // Красный: меньше недели
+                        <= 30 => SolidColorBrush.Parse("#F59E0B"), // Оранжевый: меньше месяца
+                        _ => SolidColorBrush.Parse("#10B981") // Зеленый: больше месяца
                     };
                 }
                 else

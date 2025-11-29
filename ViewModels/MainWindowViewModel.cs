@@ -6,35 +6,41 @@ namespace FinanceFlow.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
+        // Сервис для работы с целями - основной источник данных
         private readonly IGoalService _goalService;
-        private ObservableCollection<GoalViewModel> _goals = new ObservableCollection<GoalViewModel>();
 
         // Коллекция целей для отображения в UI
+        private ObservableCollection<GoalViewModel> _goals = new ObservableCollection<GoalViewModel>();
+
+        // Публичное свойство для привязки к списку целей в UI
         public ObservableCollection<GoalViewModel> Goals
         {
             get => _goals;
             set => SetProperty(ref _goals, value);
         }
 
-        // Команды
-        public ICommand LoadGoalsCommand { get; }
-        public ICommand DeleteGoalCommand { get; } // Команда для контекстного меню
+        // Команды для взаимодействия с пользовательским интерфейсом
+        public ICommand LoadGoalsCommand { get; } // Загрузка списка целей
+        public ICommand DeleteGoalCommand { get; } // Удаление цели через контекстное меню
 
-        // Конструктор
+        // Основной конструктор с внедрением зависимостей
         public MainWindowViewModel(IGoalService goalService)
         {
+            // Проверяем что сервис передан корректно
             _goalService = goalService ?? throw new ArgumentNullException(nameof(goalService));
 
+            // Инициализируем команды с реальной логикой
             LoadGoalsCommand = new AsyncRelayCommand(LoadGoalsAsync);
             DeleteGoalCommand = new AsyncRelayCommand<GoalViewModel>(DeleteGoalAsync);
 
-            // При старте сразу загружаем данные
+            // Загружаем цели сразу при создании ViewModel
             _ = LoadGoalsAsync();
         }
 
-        // Загрузка данных из БД
+        // Основной метод загрузки целей из базы данных
         public async Task LoadGoalsAsync()
         {
+            // Защита от вызова без инициализированного сервиса
             if (_goalService == null) return;
 
             // Получаем список целей из сервиса
@@ -44,14 +50,16 @@ namespace FinanceFlow.ViewModels
             Goals.Clear();
             foreach (var goal in goalsFromDb)
             {
-                // Оборачиваем модель (Goal) во ViewModel (GoalViewModel) для удобства UI
+                // Каждую модель Goal оборачиваем в GoalViewModel
+                // Это позволяет добавить UI-логику и привязки для отображения
                 Goals.Add(new GoalViewModel(goal));
             }
         }
 
-        // Удаление цели
+        // Удаление цели по команде из контекстного меню
         private async Task DeleteGoalAsync(GoalViewModel? goalVm)
         {
+            // Проверяем что передан корректный объект
             if (goalVm == null) return;
 
             // Вызываем сервис для удаления из БД
@@ -64,6 +72,7 @@ namespace FinanceFlow.ViewModels
             }
             else
             {
+                // Лог ошибки
                 Console.WriteLine($"Ошибка удаления: {result.message}");
             }
         }

@@ -12,13 +12,13 @@ namespace FinanceFlow.Windows
 
             this.DataContextChanged += (s, e) =>
             {
-                // 1. Подписка на закрытие (специфично для AddEditGoalViewModel)
+                // Подписка на закрытие
                 if (DataContext is AddEditGoalViewModel vm)
                 {
                     vm.RequestClose += () => this.Close();
                 }
 
-                // 2. Подписка на уведомления/ошибки (от ViewModelBase)
+                // Подписка на уведомления/ошибки
                 if (DataContext is ViewModelBase baseVm)
                 {
                     baseVm.RequestNotification += (title, message) =>

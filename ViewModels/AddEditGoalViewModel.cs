@@ -3,7 +3,6 @@ using FinanceFlow.Services.Interfaces;
 using Avalonia.Media.Imaging;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
-using Avalonia.Data;
 
 namespace FinanceFlow.ViewModels
 {
@@ -13,13 +12,15 @@ namespace FinanceFlow.ViewModels
         private readonly bool _isEditMode;
         private readonly int _editingGoalId;
 
-        // Публичный метод для вызова ошибки из View (Code-behind)
+        // Публичный метод для вызова ошибки из View
         public void TriggerError(string message, string title) => ShowError(message, title);
 
         public event Action? RequestClose;
 
+        // Динамический заголовок окна в зависимости от режима
         public string WindowTitle => _isEditMode ? "Редактирование цели" : "Новая цель";
 
+        // Основные свойства цели с уведомлениями об изменении
         private string _title = string.Empty;
         public string Title
         {
@@ -33,6 +34,7 @@ namespace FinanceFlow.ViewModels
         private PriorityItem? _selectedPriority;
         public PriorityItem? SelectedPriority { get => _selectedPriority; set => SetProperty(ref _selectedPriority, value); }
 
+        // Суммы с nullable для удобства ввода
         private decimal? _targetAmount = 1;
         public decimal? TargetAmount
         {
@@ -47,6 +49,7 @@ namespace FinanceFlow.ViewModels
             set => SetProperty(ref _currentAmount, value);
         }
 
+        // Даты с разумными значениями по умолчанию
         private DateTime _startDate = DateTime.Today;
         public DateTime StartDate { get => _startDate; set => SetProperty(ref _startDate, value); }
 
@@ -56,6 +59,7 @@ namespace FinanceFlow.ViewModels
         private string _description = string.Empty;
         public string Description { get => _description; set => SetProperty(ref _description, value); }
 
+        // Путь к изображению и само изображение
         private string? _imagePath;
         public string? ImagePath { get => _imagePath; set => SetProperty(ref _imagePath, value); }
 
@@ -67,13 +71,16 @@ namespace FinanceFlow.ViewModels
         }
         public bool HasImage => GoalImage != null;
 
+        // Коллекции для выпадающих списков
         public ObservableCollection<GoalCategory> Categories { get; } = new();
         public ObservableCollection<PriorityItem> Priorities { get; } = new();
 
+        // Команды для кнопок интерфейса
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
         public ICommand DeleteImageCommand { get; }
 
+        // Конструктор для дизайнера 
         public AddEditGoalViewModel()
         {
             _goalService = null!;
@@ -83,18 +90,21 @@ namespace FinanceFlow.ViewModels
             DeleteImageCommand = new AsyncRelayCommand(() => Task.CompletedTask);
         }
 
+        // Основной конструктор - инициализирует все зависимости
         public AddEditGoalViewModel(IGoalService goalService, Goal? goalToEdit = null)
         {
             _goalService = goalService ?? throw new ArgumentNullException(nameof(goalService));
             InitializePriorities();
-            _ = LoadCategoriesAsync(goalToEdit);
+            _ = LoadCategoriesAsync(goalToEdit); // Загружаю категории асинхронно
 
+            // Определяю режим работы: редактирование или создание
             if (goalToEdit != null)
             {
                 _isEditMode = true;
                 _editingGoalId = goalToEdit.GoalId;
             }
 
+            // Настраиваю команды с реальной логикой
             SaveCommand = new AsyncRelayCommand(SaveGoalAsync);
             CancelCommand = new AsyncRelayCommand(() => { RequestClose?.Invoke(); return Task.CompletedTask; });
 
@@ -107,14 +117,18 @@ namespace FinanceFlow.ViewModels
             });
         }
 
+        // Заполняю список приоритетов с цветами для красивого отображения
         private void InitializePriorities()
         {
             Priorities.Add(new PriorityItem { Value = 1, Name = "Высокий", Color = "#EF4444" });
             Priorities.Add(new PriorityItem { Value = 2, Name = "Средний", Color = "#F59E0B" });
             Priorities.Add(new PriorityItem { Value = 3, Name = "Низкий", Color = "#10B981" });
+
+            // Средний по умолчанию
             SelectedPriority = Priorities.FirstOrDefault(p => p.Value == 2);
         }
 
+        // Загружаю категории из базы и заполняю форму если редактирую
         private async Task LoadCategoriesAsync(Goal? goalToEdit)
         {
             if (_goalService == null) return;
@@ -122,10 +136,13 @@ namespace FinanceFlow.ViewModels
             Categories.Clear();
             foreach (var cat in categoriesFromDb) Categories.Add(cat);
 
+            // Если редактирую существующую цель - заполняю форму её данными
             if (goalToEdit != null) FillFormData(goalToEdit);
-            else SelectedCategory = Categories.FirstOrDefault();
+            else SelectedCategory = Categories.FirstOrDefault(); // Иначе выбираю 
+            // первую категорию
         }
 
+        // Заполняю форму данными из существующей цели
         private void FillFormData(Goal goal)
         {
             Title = goal.Title;
@@ -137,9 +154,11 @@ namespace FinanceFlow.ViewModels
             SelectedCategory = Categories.FirstOrDefault(c => c.CategoryId == goal.CategoryId);
             SelectedPriority = Priorities.FirstOrDefault(p => p.Value == goal.Priority);
 
+            // Загружаю изображение если оно есть
             if (!string.IsNullOrEmpty(goal.ImagePath)) SetImage(goal.ImagePath);
         }
 
+        // Устанавливаю изображение цели с обработкой ошибок
         public void SetImage(string path)
         {
             try
@@ -154,13 +173,14 @@ namespace FinanceFlow.ViewModels
             catch (Exception ex) { Console.WriteLine($"Ошибка картинки: {ex.Message}"); }
         }
 
+        // Основной метод сохранения цели
         private async Task SaveGoalAsync()
         {
+            // Сначала проверяю валидность введенных данных
             var (isValid, error, title) = Validate();
 
             if (!isValid)
             {
-                // ИСПРАВЛЕНО: Передаем заголовок ошибки
                 ShowError(error, title);
                 return;
             }
@@ -170,13 +190,14 @@ namespace FinanceFlow.ViewModels
                 decimal current = CurrentAmount ?? 0;
                 decimal target = TargetAmount ?? 0;
 
-                // 1. Проверка бизнес-правила (Суммы) перед созданием объекта
+                // Проверка бизнес-правила (Суммы) перед созданием объекта
                 if (current > target)
                 {
                     ShowError($"Текущая сумма ({current:N0}) не может быть больше целевой ({target:N0}).", "Ошибка суммы");
                     return;
                 }
 
+                // Создаю объект цели с данными из формы
                 var goal = new Goal
                 {
                     GoalId = _isEditMode ? _editingGoalId : 0,
@@ -193,6 +214,7 @@ namespace FinanceFlow.ViewModels
 
                 (bool success, string message) result;
 
+                // Вызываю соответствующий метод сервиса в зависимости от режима
                 if (_isEditMode)
                     result = await _goalService.UpdateGoalAsync(goal);
                 else
@@ -200,10 +222,11 @@ namespace FinanceFlow.ViewModels
 
                 if (result.success)
                 {
-                    RequestClose?.Invoke();
+                    RequestClose?.Invoke(); // Успешно - закрываю окно
                 }
                 else
                 {
+                    // Обрабатываю разные типы ошибок от сервиса
                     if (result.message.Contains("CK_Goals_Amounts"))
                         ShowError("Текущая сумма превышает целевую.", "Ошибка данных");
                     else
@@ -216,15 +239,17 @@ namespace FinanceFlow.ViewModels
             }
         }
 
+        // Валидация данных формы перед сохранением
         private (bool isValid, string error, string title) Validate()
         {
             if (string.IsNullOrWhiteSpace(Title))
                 return (false, "Введите название цели.", "Название не указано");
 
-            // Проверяем: если null или <= 0
+            // Проверяю что целевая сумма указана и положительная
             if ((TargetAmount ?? 0) <= 0)
                 return (false, "Целевая сумма должна быть больше 0.", "Некорректная сумма");
 
+            // Проверяю логику дат
             if (EndDate.Date < StartDate.Date)
                 return (false, "Дата окончания не может быть раньше даты начала.", "Ошибка в датах");
 
@@ -232,10 +257,11 @@ namespace FinanceFlow.ViewModels
         }
     }
 
+    // Вспомогательный класс для отображения приоритетов в выпадающем списке
     public class PriorityItem
     {
-        public int Value { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Color { get; set; } = string.Empty;
+        public int Value { get; set; } // Числовое значение для базы
+        public string Name { get; set; } = string.Empty; // Отображаемое имя
+        public string Color { get; set; } = string.Empty; // Цвет для визуального отличия
     }
 }

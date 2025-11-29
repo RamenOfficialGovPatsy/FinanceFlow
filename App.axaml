@@ -4,18 +4,13 @@
              xmlns:converters="using:FinanceFlow.Converters"
              x:Class="FinanceFlow.App"
              RequestedThemeVariant="Dark">
-             <!-- Устанавливаем темную тему по умолчанию -->
+             <!-- Поставил темную тему по умолчанию -->
 
-    <!-- 
-      РЕСУРСЫ ПРИЛОЖЕНИЯ
-      Определяем все цвета и шрифты здесь согласно Style Guide.
-    -->
     <Application.Resources>
         <!-- 1. ШРИФТ -->
         <FontFamily x:Key="ManropeFont">avares://FinanceFlow/Assets/Fonts#Manrope</FontFamily>
         
         <!-- 2. ЦВЕТОВАЯ ПАЛИТРА -->
-        
         <!-- Основные фоны -->
         <SolidColorBrush x:Key="AppBackground" Color="#1F2937" />      <!-- Глубокий темный фон (Main Window) -->
         <SolidColorBrush x:Key="AppCardBackground" Color="#374151" />  <!-- Фон карточек и инпутов -->
@@ -53,18 +48,21 @@
         <FluentTheme />
 
         <!-- 1. Базовые настройки окна и шрифта -->
+        <!-- Стиль применяется ко всем окнам приложения -->
         <Style Selector="Window">
             <Setter Property="FontFamily" Value="{StaticResource ManropeFont}" />
             <Setter Property="Background" Value="{StaticResource AppBackground}" />
             <Setter Property="Foreground" Value="{StaticResource AppText}" />
         </Style>
         
+        <!-- Стиль для всех пользовательских контролов -->
         <Style Selector="UserControl">
             <Setter Property="FontFamily" Value="{StaticResource ManropeFont}" />
             <Setter Property="Foreground" Value="{StaticResource AppText}" />
         </Style>
 
         <!-- 2. Текст -->
+        <!-- Базовый стиль для всех текстовых блоков -->
         <Style Selector="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource AppText}" />
         </Style>
@@ -86,6 +84,7 @@
         </Style>
 
         <!-- 3. Поля ввода (TextBox, NumericUpDown) -->
+        <!-- Базовый стиль для текстовых полей -->
         <Style Selector="TextBox">
             <Setter Property="Background" Value="{StaticResource AppCardBackground}" />
             <Setter Property="Foreground" Value="{StaticResource AppText}" />
@@ -98,7 +97,7 @@
             <Setter Property="CaretBrush" Value="{StaticResource AppText}" />
         </Style>
         
-        <!-- Убираем синий фокус по умолчанию, делаем фиолетовым -->
+        <!-- Кастомный стиль для состояния фокуса -->
         <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimary}"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -124,6 +123,7 @@
             <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
         
+        <!-- Стиль элементов выпадающего списка -->
         <Style Selector="ComboBoxItem">
             <Setter Property="Foreground" Value="{StaticResource AppText}" />
         </Style>
@@ -134,7 +134,7 @@
             <Setter Property="Foreground" Value="White" />
         </Style>
 
-        <!-- 5. Календарь (DatePicker) -->
+        <!-- 5. СТИЛИ КАЛЕНДАРЯ -->
         <Style Selector="DatePicker">
             <Setter Property="Background" Value="{StaticResource AppCardBackground}" />
             <Setter Property="Foreground" Value="{StaticResource AppText}" />
@@ -143,7 +143,8 @@
             <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
 
-        <!-- 6. Кнопки -->
+         <!-- 6. СТИЛИ КНОПОК -->
+        <!-- Базовый стиль для всех кнопок -->
         <Style Selector="Button">
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="CornerRadius" Value="8" />
@@ -154,18 +155,20 @@
             <Setter Property="FontSize" Value="14" />
         </Style>
 
-        <!-- Primary Button (Фиолетовая) -->
+        <!-- Основная кнопка (Primary Button) (Фиолетовая) -->
         <Style Selector="Button.Primary">
             <Setter Property="Background" Value="{StaticResource AppButtonBackground}" />
             <Setter Property="Foreground" Value="#E0E7FF" />
             <Setter Property="BorderThickness" Value="0"/>
         </Style>
+
+        <!-- Эффект наведения для основной кнопки -->
         <Style Selector="Button.Primary:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="{StaticResource AppPrimaryHover}" />
             <Setter Property="Foreground" Value="White" />
         </Style>
 
-        <!-- Кнопка Аналитика (Серый фон) -->
+        <!-- Кнопка для аналитики (нейтральный серый) -->
         <Style Selector="Button.Analytics">
             <Setter Property="Background" Value="{StaticResource AppCardBackground}" />
             <Setter Property="BorderThickness" Value="0"/>
@@ -194,7 +197,7 @@
             <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
         </Style>
 
-        <!-- 7. Прогресс-бар -->
+        <!-- 7. СТИЛИ ПРОГРЕСС-БАРА -->
         <Style Selector="ProgressBar">
             <Setter Property="Height" Value="6"/>
             <Setter Property="CornerRadius" Value="3"/>
@@ -203,7 +206,8 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
-        <!-- 8. Круговой график(Donut Chart) -->
+       <!-- 8. СТИЛИ ДЛЯ КРУГОВОЙ ДИАГРАММЫ (Donut Chart) -->
+        <!-- Карточка категории в диаграмме -->
         <Style Selector="Border.CategoryCard">
             <Setter Property="Background" Value="{StaticResource AppCardBackground}" />
             <Setter Property="CornerRadius" Value="8" />
@@ -211,12 +215,14 @@
             <Setter Property="MinWidth" Value="110" />
         </Style>
         
+        <!-- Текст процентов в диаграмме -->
         <Style Selector="TextBlock.PercentText">
             <Setter Property="FontSize" Value="20" />
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="Foreground" Value="{StaticResource AppText}" />
         </Style>
         
+        <!-- Название категории в диаграмме -->
         <Style Selector="TextBlock.CategoryName">
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource AppTextSecondary}" />

@@ -7,19 +7,20 @@ namespace FinanceFlow.ViewModels
 {
     public class DepositViewModel : ViewModelBase
     {
-        private Goal _goal;
-        private readonly IDepositService _depositService;
-        private readonly IGoalService _goalService;
+        // Основные зависимости и состояние
+        private Goal _goal; // Цель для которой управляем пополнениями
+        private readonly IDepositService _depositService; // Сервис работы с пополнениями
+        private readonly IGoalService _goalService; // Сервис работы с целями
 
         // Состояние редактирования
         private bool _isEditMode;
-        private int _editingDepositId;
+        private int _editingDepositId;  // ID пополнения которое редактируем
 
-        public event Action? OnProgressUpdated;
-        public event Action? RequestClose;
+        // События для коммуникации с View
+        public event Action? OnProgressUpdated; // Вызывается при обновлении прогресса цели
+        public event Action? RequestClose; // Запрос на закрытие окна
 
-        // --- Свойства ввода ---
-
+        // Свойства ввода данных пополнения
         private decimal? _amount = 1000;
         public decimal? Amount
         {
@@ -41,8 +42,7 @@ namespace FinanceFlow.ViewModels
             set => SetProperty(ref _comment, value);
         }
 
-        // --- Свойства состояния UI ---
-
+        //  Свойства состояния UI
         public bool IsEditMode
         {
             get => _isEditMode;
@@ -50,26 +50,37 @@ namespace FinanceFlow.ViewModels
             {
                 if (SetProperty(ref _isEditMode, value))
                 {
+                    // При изменении режима обновляем текст и иконку кнопки
                     OnPropertyChanged(nameof(ButtonText));
                     OnPropertyChanged(nameof(ButtonIcon));
                 }
             }
         }
 
+        // Текст кнопки зависит от режима (редактирование или создание)
         public string ButtonText => IsEditMode ? "Сохранить" : "Внести средства";
+
+        // Эмодзи для визуального отличия
         public string ButtonIcon => IsEditMode ? "💾" : "💰";
 
+        // Коллекция доступных типов пополнений для выпадающего списка
         public ObservableCollection<string> DepositTypes { get; } = new()
         {
             "Обычное", "Зарплата", "Фриланс", "Бонус", "Другое"
         };
 
-        // --- Свойства цели ---
+        // Свойства отображения информации о цели 
 
+        // Название текущей цели
         public string GoalTitle => _goal.Title;
+
+        // Текущая накопленная сумма
         public decimal CurrentAmount => _goal.CurrentAmount;
+
+        // Прогресс в виде текста
         public string ProgressText => $"{CurrentAmount:N0} / {_goal.TargetAmount:N0} ₽";
 
+        // Процент выполнения цели с защитой от превышения 100%
         public string ProgressPercent
         {
             get
@@ -80,24 +91,26 @@ namespace FinanceFlow.ViewModels
             }
         }
 
+        // Коллекция для отображения истории пополнений
         public ObservableCollection<DepositItemViewModel> DepositHistory { get; } = new();
 
-        // --- Команды ---
+        // Команды для взаимодействия с UI
+        public ICommand SaveCommand { get; } // Сохранение пополнения
+        public ICommand CancelCommand { get; } // Отмена и закрытие
+        public ICommand DeleteHistoryItemCommand { get; } // Удаление из истории
+        public ICommand StartEditCommand { get; } // Начало редактирования
+        public ICommand CancelEditCommand { get; } // Отмена редактирования
 
-        public ICommand SaveCommand { get; }
-        public ICommand CancelCommand { get; }
-        public ICommand DeleteHistoryItemCommand { get; }
-        public ICommand StartEditCommand { get; }
-        public ICommand CancelEditCommand { get; }
+        // Конструкторы
 
-        // --- Конструкторы ---
-
+        // Конструктор для дизайнера
         public DepositViewModel()
         {
             _goal = new Goal { Title = "Design Goal", TargetAmount = 100000 };
             _depositService = null!;
             _goalService = null!;
 
+            // Заглушки для команд в режиме дизайнера
             SaveCommand = new AsyncRelayCommand(() => Task.CompletedTask);
             CancelCommand = new AsyncRelayCommand(() => Task.CompletedTask);
             DeleteHistoryItemCommand = new AsyncRelayCommand<DepositItemViewModel>(_ => Task.CompletedTask);
@@ -105,12 +118,14 @@ namespace FinanceFlow.ViewModels
             CancelEditCommand = new AsyncRelayCommand(() => Task.CompletedTask);
         }
 
+        // Основной конструктор с реальными зависимостями
         public DepositViewModel(Goal goal, IDepositService depositService, IGoalService goalService)
         {
             _goal = goal ?? throw new ArgumentNullException(nameof(goal));
             _depositService = depositService ?? throw new ArgumentNullException(nameof(depositService));
             _goalService = goalService ?? throw new ArgumentNullException(nameof(goalService));
 
+            // Инициализация команд с реальной логикой
             SaveCommand = new AsyncRelayCommand(SaveAsync);
             DeleteHistoryItemCommand = new AsyncRelayCommand<DepositItemViewModel>(DeleteDepositAsync);
 
@@ -126,15 +141,17 @@ namespace FinanceFlow.ViewModels
             // Команда отмены редактирования (сброс формы)
             CancelEditCommand = new AsyncRelayCommand(() =>
             {
-                ResetForm();
+                ResetForm(); // Сбрасываем форму при отмене редактирования
                 return Task.CompletedTask;
             });
 
+            // Загружаем историю асинхронно при создании
             _ = LoadHistoryAsync();
         }
 
-        // --- Логика ---
+        //  Основная логика работы с пополнениями
 
+        // Загрузка истории пополнений из базы данных
         private async Task LoadHistoryAsync()
         {
             if (_depositService == null) return;
@@ -143,6 +160,7 @@ namespace FinanceFlow.ViewModels
             foreach (var dep in deposits) DepositHistory.Add(new DepositItemViewModel(dep));
         }
 
+        // Перезагрузка данных цели из базы для актуального прогресса
         private async Task ReloadGoalFromDb()
         {
             if (_goalService == null) return;
@@ -151,27 +169,32 @@ namespace FinanceFlow.ViewModels
             {
                 _goal.CurrentAmount = updatedGoal.CurrentAmount;
                 _goal.IsCompleted = updatedGoal.IsCompleted;
+
+                // Уведомляем об изменении свойств для обновления UI
                 OnPropertyChanged(nameof(CurrentAmount));
                 OnPropertyChanged(nameof(ProgressText));
                 OnPropertyChanged(nameof(ProgressPercent));
             }
         }
 
-        // FIX: Изменили void на Task
+        // Начало редактирования существующего пополнения
         private Task StartEdit(DepositItemViewModel? item)
         {
             if (item == null) return Task.CompletedTask;
 
+            // Заполняем форму данными из выбранного пополнения
             _editingDepositId = item.DepositId;
             Amount = item.Amount;
             Comment = item.Comment;
             SelectedDepositType = ConvertKeyToType(item.TypeKey);
 
+            // Переключаемся в режим редактирования
             IsEditMode = true;
 
             return Task.CompletedTask;
         }
 
+        // Сброс формы к состоянию по умолчанию
         private void ResetForm()
         {
             Amount = 1000;
@@ -181,11 +204,12 @@ namespace FinanceFlow.ViewModels
             _editingDepositId = 0;
         }
 
+        // Основной метод сохранения пополнения (создание или обновление)
         private async Task SaveAsync()
         {
             decimal valueToSave = Amount ?? 0;
 
-            // 1. Валидация
+            // Валидация введенной суммы
             if (valueToSave <= 0)
             {
                 ShowError("Сумма пополнения должна быть больше 0.");
@@ -194,10 +218,13 @@ namespace FinanceFlow.ViewModels
 
             try
             {
+                // Создаем объект пополнения с данными из формы
                 var deposit = new GoalDeposit
                 {
                     GoalId = _goal.GoalId,
                     Amount = valueToSave,
+
+                    // Конвертируем в ключ для БД
                     DepositType = ConvertTypeToKey(SelectedDepositType),
                     Comment = Comment,
                     DepositDate = DateTime.Now
@@ -206,6 +233,7 @@ namespace FinanceFlow.ViewModels
                 bool success;
                 string message;
 
+                // Выбираем метод сервиса в зависимости от режима
                 if (IsEditMode)
                 {
                     deposit.DepositId = _editingDepositId;
@@ -218,24 +246,26 @@ namespace FinanceFlow.ViewModels
 
                 if (success)
                 {
+                    // Обновляем данные после успешного сохранения
                     await ReloadGoalFromDb();
                     await LoadHistoryAsync();
-                    OnProgressUpdated?.Invoke();
+                    OnProgressUpdated?.Invoke(); // Уведомляем об обновлении прогресса
 
                     if (IsEditMode)
                     {
+                        // В режиме редактирования сбрасываем форму
                         ResetForm();
                         ShowSuccess("Запись успешно обновлена."); // Опционально, можно просто молча
                     }
                     else
                     {
+                        // В режиме создания закрываем окно
                         RequestClose?.Invoke();
-                        // ShowSuccess("Пополнение успешно добавлено."); // Обычно окно просто закрывается
                     }
                 }
                 else
                 {
-                    // Ошибка от сервиса (логики)
+                    // Показываем ошибку от сервиса
                     ShowError($"Не удалось выполнить операцию: {message}");
                 }
             }
@@ -246,10 +276,12 @@ namespace FinanceFlow.ViewModels
             }
         }
 
+        // Удаление пополнения из истории
         private async Task DeleteDepositAsync(DepositItemViewModel? itemVm)
         {
             if (itemVm == null) return;
 
+            // Если удаляем редактируемый элемент - сбрасываем форму
             if (IsEditMode && itemVm.DepositId == _editingDepositId)
             {
                 ResetForm();
@@ -259,6 +291,7 @@ namespace FinanceFlow.ViewModels
 
             if (result.success)
             {
+                // Обновляем данные после удаления
                 await ReloadGoalFromDb();
                 DepositHistory.Remove(itemVm);
                 OnProgressUpdated?.Invoke();
@@ -270,6 +303,7 @@ namespace FinanceFlow.ViewModels
             }
         }
 
+        // Конвертация отображаемого типа в ключ для базы данных
         private string ConvertTypeToKey(string displayType)
         {
             return displayType switch
@@ -282,6 +316,7 @@ namespace FinanceFlow.ViewModels
             };
         }
 
+        // Конвертация ключа из базы в отображаемый тип
         private string ConvertKeyToType(string key)
         {
             return key switch
@@ -295,13 +330,14 @@ namespace FinanceFlow.ViewModels
         }
     }
 
+    // ViewModel для отображения элемента истории пополнений
     public class DepositItemViewModel
     {
-        public int DepositId { get; }
-        public decimal Amount { get; }
-        public DateTime Date { get; }
-        public string TypeKey { get; }
-        public string Comment { get; }
+        public int DepositId { get; } // ID пополнения
+        public decimal Amount { get; } // Сумма пополнения
+        public DateTime Date { get; } // Дата внесения
+        public string TypeKey { get; } // Ключ типа для базы
+        public string Comment { get; } // Комментарий к пополнению
 
         public DepositItemViewModel(GoalDeposit deposit)
         {
@@ -312,6 +348,7 @@ namespace FinanceFlow.ViewModels
             Comment = deposit.Comment ?? string.Empty;
         }
 
+        // Отображаемое название типа пополнения
         public string DisplayType => TypeKey switch
         {
             "salary" => "Зарплата",
@@ -321,6 +358,7 @@ namespace FinanceFlow.ViewModels
             _ => "Обычное"
         };
 
+        // Иконка для типа пополнения
         public string Icon => TypeKey switch
         {
             "salary" => "🔹",
@@ -330,6 +368,7 @@ namespace FinanceFlow.ViewModels
             _ => "🔹"
         };
 
+        // Цвет для иконки типа пополнения
         public string IconColor => TypeKey switch
         {
             "salary" => "#3B82F6",
@@ -339,6 +378,7 @@ namespace FinanceFlow.ViewModels
             _ => "#8B5CF6"
         };
 
+        // Флаг наличия комментария
         public bool HasComment => !string.IsNullOrWhiteSpace(Comment);
     }
 }

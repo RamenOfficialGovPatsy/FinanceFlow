@@ -10,7 +10,7 @@ namespace FinanceFlow.ViewModels
     {
         private readonly IAnalyticsService? _analyticsService;
 
-        // Фиксированная палитра из 30 насыщенных темных цветов
+        // Фиксированная палитра из 30 насыщенных темных цветов для круговой диаграммы
         private readonly string[] _palette = new[]
         {
             // --- Красные и Бордовые ---
@@ -56,6 +56,7 @@ namespace FinanceFlow.ViewModels
             "#FFD600"  // Yellow A700 (Насыщенный золотой)
         };
 
+        // Основные статистические свойства с уведомлениями об изменении
         private int _totalGoals;
         public int TotalGoals { get => _totalGoals; set => SetProperty(ref _totalGoals, value); }
 
@@ -65,6 +66,8 @@ namespace FinanceFlow.ViewModels
             get => _completedGoals;
             set { if (SetProperty(ref _completedGoals, value)) OnPropertyChanged(nameof(CompletedGoalsText)); }
         }
+
+        // Вычисляемое свойство для отображения завершенных целей с процентом
         public string CompletedGoalsText => $"{CompletedGoals} ({GetPercentage(CompletedGoals, TotalGoals)}%)";
 
         private int _inProgressGoals;
@@ -94,8 +97,11 @@ namespace FinanceFlow.ViewModels
             get => _averageProgress;
             set { if (SetProperty(ref _averageProgress, value)) OnPropertyChanged(nameof(AccumulatedText)); }
         }
+
+        // Отображаю накопленную сумму и общий прогресс в одной строке
         public string AccumulatedText => $"{TotalCurrentAmount:N0} ₽ ({AverageProgress:F1}%)";
 
+        // Данные для круговой диаграммы - значения и цвета сегментов
         private List<double> _chartValues = new();
         public List<double> ChartValues
         {
@@ -110,14 +116,17 @@ namespace FinanceFlow.ViewModels
             set => SetProperty(ref _chartColors, value);
         }
 
+        // Коллекции для отображения в интерфейсе
         public ObservableCollection<CategoryDistributionItem> CategoryLegend { get; } = new();
         public ObservableCollection<GoalViewModel> UpcomingDeadlines { get; } = new();
 
+        // Команды для кнопок
         public ICommand GenerateReportCommand { get; }
         public ICommand CloseCommand { get; }
 
         public event Action? RequestClose;
 
+        // Конструктор для дизайнера
         public AnalyticsViewModel()
         {
             _analyticsService = null;
@@ -125,6 +134,7 @@ namespace FinanceFlow.ViewModels
             CloseCommand = new AsyncRelayCommand(() => Task.CompletedTask);
         }
 
+        // Основной конструктор с зависимостями
         public AnalyticsViewModel(IAnalyticsService analyticsService)
         {
             _analyticsService = analyticsService ?? throw new ArgumentNullException(nameof(analyticsService));
@@ -136,13 +146,16 @@ namespace FinanceFlow.ViewModels
                 return Task.CompletedTask;
             });
 
+            // Загружаю данные аналитики сразу при создании ViewModel
             _ = LoadAnalyticsDataAsync();
         }
 
+        // Основной метод загрузки всех данных аналитики
         public async Task LoadAnalyticsDataAsync()
         {
             if (_analyticsService == null) return;
 
+            // Загружаю общую статистику
             var stats = await _analyticsService.GetGeneralStatisticsAsync();
             TotalGoals = stats.TotalGoals;
             CompletedGoals = stats.CompletedGoals;
@@ -152,11 +165,14 @@ namespace FinanceFlow.ViewModels
             TotalCurrentAmount = stats.TotalCurrentAmount;
             AverageProgress = stats.AverageProgress;
 
+            // Загружаю распределение по категориям для диаграммы
             var distribution = await _analyticsService.GetCategoryDistributionAsync();
 
+            // Перемешиваю палитру, чтобы цвета каждый раз распределялись по-разному
             var random = new Random();
             var shuffledPalette = _palette.OrderBy(x => random.Next()).ToArray();
 
+            // Очищаю предыдущие данные и готовлю новые для диаграммы
             CategoryLegend.Clear();
             var newValues = new List<double>();
             var newColors = new List<Color>();
@@ -164,26 +180,27 @@ namespace FinanceFlow.ViewModels
             int colorIndex = 0;
             foreach (var item in distribution)
             {
-                // Присваиваем цвет сегменту из нашей палитры по очереди
+                // Беру следующий цвет из перемешанной палитры
                 string hexColor = shuffledPalette[colorIndex % shuffledPalette.Length];
-
-                // ВАЖНО: Обновляем цвет в самом элементе, чтобы легенда совпадала с графиком
                 item.Color = hexColor;
 
                 CategoryLegend.Add(item);
                 newValues.Add(item.Percentage);
 
+                // Паршу HEX в Color для Avalonia
                 if (Color.TryParse(hexColor, out Color color))
                     newColors.Add(color);
                 else
-                    newColors.Add(Colors.Gray);
+                    newColors.Add(Colors.Gray); // Запасной вариант если парсинг не удался
 
                 colorIndex++;
             }
 
+            // Обновляю данные диаграммы
             ChartValues = newValues;
             ChartColors = newColors;
 
+            // Загружаю ближайшие дедлайны для отображения
             var deadlines = await _analyticsService.GetUpcomingDeadlinesAsync(3);
             UpcomingDeadlines.Clear();
             foreach (var goal in deadlines)
@@ -192,6 +209,7 @@ namespace FinanceFlow.ViewModels
             }
         }
 
+        // Генерация PDF отчета с открытием после создания
         private async Task GeneratePdfReportAsync()
         {
             if (_analyticsService == null) return;
@@ -206,6 +224,7 @@ namespace FinanceFlow.ViewModels
             }
         }
 
+        // Открываю файл или URL в стандартном приложении системы
         private void OpenUrl(string url)
         {
             try
@@ -218,6 +237,7 @@ namespace FinanceFlow.ViewModels
             }
         }
 
+        // Вспомогательный метод для расчета процентов
         private string GetPercentage(int value, int total)
         {
             if (total == 0) return "0";

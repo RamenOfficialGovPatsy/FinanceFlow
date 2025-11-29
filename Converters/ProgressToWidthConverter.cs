@@ -1,5 +1,4 @@
 using Avalonia.Data.Converters;
-using System;
 using System.Globalization;
 
 namespace FinanceFlow.Converters
@@ -10,7 +9,8 @@ namespace FinanceFlow.Converters
         {
             if (value is decimal progress && progress >= 0 && progress <= 100)
             {
-                // Возвращаем процент от 300px (ширина прогресс-бара)
+                // Преобразуем процент прогресса в пиксели:
+                // 100% = 300px, поэтому умножаем на 3
                 return progress * 3;
             }
             return 0;

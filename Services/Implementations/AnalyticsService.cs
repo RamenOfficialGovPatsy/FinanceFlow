@@ -5,11 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace FinanceFlow.Services.Implementations
 {
@@ -20,7 +15,7 @@ namespace FinanceFlow.Services.Implementations
         public AnalyticsService(AppDbContext context)
         {
             _context = context;
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPDF.Settings.License = LicenseType.Community; // Бесплатная лицензия для QuestPDF
         }
 
         public async Task<AnalyticsSummaryDto> GetGeneralStatisticsAsync()
@@ -28,8 +23,10 @@ namespace FinanceFlow.Services.Implementations
             var goals = await _context.Goals.ToListAsync();
             var summary = new AnalyticsSummaryDto();
 
+            // Если целей нет - возвращаю пустую статистику
             if (!goals.Any()) return summary;
 
+            // Считаю основные метрики для дашборда
             summary.TotalGoals = goals.Count;
             summary.CompletedGoals = goals.Count(g => g.IsCompleted);
             summary.OverdueGoals = goals.Count(g => !g.IsCompleted && g.EndDate < DateTime.Today);
@@ -37,9 +34,12 @@ namespace FinanceFlow.Services.Implementations
             summary.TotalTargetAmount = goals.Sum(g => g.TargetAmount);
             summary.TotalCurrentAmount = goals.Sum(g => g.CurrentAmount);
 
+            // Вычисляю средний прогресс по всем целям
             if (summary.TotalTargetAmount > 0)
             {
                 summary.AverageProgress = (double)(summary.TotalCurrentAmount / summary.TotalTargetAmount) * 100;
+
+                // Ограничиваю 100%
                 if (summary.AverageProgress > 100) summary.AverageProgress = 100;
             }
 
@@ -53,6 +53,7 @@ namespace FinanceFlow.Services.Implementations
 
             var totalGoals = goals.Count;
 
+            // Группирую цели по категориям для круговой диаграммы
             return goals
                 .GroupBy(g => g.GoalCategory)
                 .Select(g => new CategoryDistributionItem
@@ -61,14 +62,17 @@ namespace FinanceFlow.Services.Implementations
                     Icon = g.Key != null ? g.Key.Icon : "⭐",
                     Color = g.Key != null ? g.Key.Color : "#6B7280",
                     GoalsCount = g.Count(),
+
+                    // Процент с одним знаком после запятой
                     Percentage = Math.Round((double)g.Count() / totalGoals * 100, 1)
                 })
-                .OrderByDescending(x => x.Percentage)
+                .OrderByDescending(x => x.Percentage) // Сортирую по убыванию процента
                 .ToList();
         }
 
         public async Task<List<Goal>> GetUpcomingDeadlinesAsync(int count = 3)
         {
+            // Беру ближайшие незавершенные цели, отсортированные по дате окончания
             return await _context.Goals
                 .Include(g => g.GoalCategory)
                 .Where(g => !g.IsCompleted)
@@ -83,11 +87,11 @@ namespace FinanceFlow.Services.Implementations
             var stats = await GetGeneralStatisticsAsync();
             var allGoals = await _context.Goals
                 .Include(g => g.GoalCategory)
-                .OrderByDescending(g => g.IsCompleted)
-                .ThenBy(g => g.EndDate)
+                .OrderByDescending(g => g.IsCompleted) // Сначала выполненные
+                .ThenBy(g => g.EndDate) // Потом по дате окончания
                 .ToListAsync();
 
-            // 1. Создаем запись в БД
+            // Сохраняю отчет в базу для истории
             var reportRecord = new AnalyticsReport
             {
                 ReportType = reportType,
@@ -102,9 +106,8 @@ namespace FinanceFlow.Services.Implementations
             _context.AnalyticsReports.Add(reportRecord);
             await _context.SaveChangesAsync();
 
-            // 2. Настройка путей (Папка "Документы/FinanceFlow-Отчеты")
+            // Создаю папку для отчетов в Документах, если её нет
             string docsFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            // ИСПРАВЛЕНИЕ: Путь изменен по требованию
             string reportsFolder = Path.Combine(docsFolder, "FinanceFlow-Отчеты");
 
             if (!Directory.Exists(reportsFolder))
@@ -112,11 +115,11 @@ namespace FinanceFlow.Services.Implementations
                 Directory.CreateDirectory(reportsFolder);
             }
 
-            // Имя файла: FinanceFlow_Report_yyyy-MM-dd_HH_mm_ss.pdf
+            // Уникальное имя файла с timestamp
             string fileName = $"FinanceFlow_Report_{DateTime.Now:yyyy-MM-dd_HH_mm_ss}.pdf";
             string filePath = Path.Combine(reportsFolder, fileName);
 
-            // ЦВЕТОВАЯ ПАЛИТРА (DARK)
+            // Цветовая схема в стиле приложения (темная тема)
             string BgColor = "#1F2937";
             string CardBgColor = "#374151";
             string TextColor = "#F9FAFB";
@@ -124,7 +127,7 @@ namespace FinanceFlow.Services.Implementations
             string BorderColor = "#4B5563";
             string AccentColor = "#8B5CF6";
 
-            // 3. Верстка документа
+            // Генерация PDF документа
             Document.Create(container =>
             {
                 container.Page(page =>
@@ -133,10 +136,9 @@ namespace FinanceFlow.Services.Implementations
                     page.Margin(30);
                     page.PageColor(BgColor);
 
-                    // ИСПРАВЛЕНИЕ: Шрифт Calibri
                     page.DefaultTextStyle(x => x.FontFamily("DejaVu Sans").FontSize(14).FontColor(TextColor));
 
-                    // --- ШАПКА ---
+                    // Шапка отчета с логотипом и датой
                     page.Header().Column(headerCol =>
                     {
                         headerCol.Item()
@@ -162,7 +164,7 @@ namespace FinanceFlow.Services.Implementations
                         headerCol.Item().Height(30);
                     });
 
-                    // --- КОНТЕНТ ---
+                    // Основное содержимое отчета
                     page.Content().Column(col =>
                     {
                         // Сводка
@@ -176,7 +178,7 @@ namespace FinanceFlow.Services.Implementations
 
                         col.Item().Height(30);
 
-                        // Заголовок таблицы
+                        // Таблица с детализацией целей
                         col.Item()
                             .BorderLeft(4).BorderColor(AccentColor)
                             .PaddingLeft(10)
@@ -190,12 +192,13 @@ namespace FinanceFlow.Services.Implementations
                         {
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.RelativeColumn(40);
-                                columns.RelativeColumn(20);
-                                columns.RelativeColumn(25);
-                                columns.RelativeColumn(15);
+                                columns.RelativeColumn(40); // Название
+                                columns.RelativeColumn(20); // Категория
+                                columns.RelativeColumn(25); // Прогресс
+                                columns.RelativeColumn(15); // Статус
                             });
 
+                            // Заголовок таблицы
                             table.Header(header =>
                             {
                                 header.Cell().Element(c => HeaderCellStyle(c, CardBgColor, BorderColor)).Text("Название");
@@ -204,6 +207,7 @@ namespace FinanceFlow.Services.Implementations
                                 header.Cell().Element(c => HeaderCellStyle(c, CardBgColor, BorderColor)).Text("Статус");
                             });
 
+                            // Строки с данными целей
                             foreach (var goal in allGoals)
                             {
                                 table.Cell().Element(c => BodyCellStyle(c, BorderColor)).Text(goal.Title);
@@ -212,6 +216,7 @@ namespace FinanceFlow.Services.Implementations
                                 var percent = goal.TargetAmount > 0 ? (goal.CurrentAmount / goal.TargetAmount) * 100 : 0;
                                 table.Cell().Element(c => BodyCellStyle(c, BorderColor)).Text($"{percent:F0}% ({goal.CurrentAmount:N0})");
 
+                                // Определяю цвет статуса в зависимости от состояния цели
                                 string statusText;
                                 string colorHex;
 
@@ -242,7 +247,7 @@ namespace FinanceFlow.Services.Implementations
                         });
                     });
 
-                    // --- ФУТЕР ---
+                    // Футер с нумерацией страниц
                     page.Footer().Column(col =>
                     {
                         col.Item().PaddingTop(20).BorderTop(1).BorderColor(BorderColor);
@@ -268,6 +273,7 @@ namespace FinanceFlow.Services.Implementations
             return filePath;
         }
 
+        // Рисую карточку для статистики в шапке отчета
         private void DrawCard(RowDescriptor row, string title, string value, bool isAccent, string bg, string textSec, string textMain, string accent)
         {
             row.RelativeItem()
@@ -284,10 +290,12 @@ namespace FinanceFlow.Services.Implementations
                     var txt = col.Item().AlignCenter().Text(value)
                         .FontSize(20).Bold().FontColor(textMain);
 
+                    // Выделяю акцентным цветом если нужно
                     if (isAccent) txt.FontColor(accent);
                 });
         }
 
+        // Стиль для заголовков таблицы
         private static IContainer HeaderCellStyle(IContainer container, string bg, string border)
         {
             return container
@@ -296,6 +304,7 @@ namespace FinanceFlow.Services.Implementations
                 .Padding(10);
         }
 
+        // Стиль для ячеек таблицы
         private static IContainer BodyCellStyle(IContainer container, string border)
         {
             return container

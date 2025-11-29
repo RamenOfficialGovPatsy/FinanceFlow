@@ -22,9 +22,9 @@ namespace FinanceFlow.Services.Implementations
             try
             {
                 var goals = await _context.Goals
-                    .Include(g => g.GoalCategory)
-                    .Include(g => g.Deposits)
-                    .OrderByDescending(g => g.CreatedAt)
+                    .Include(g => g.GoalCategory) // Загружаем связанные категории
+                    .Include(g => g.Deposits) // Загружаем историю пополнений
+                    .OrderByDescending(g => g.CreatedAt) // Сортирую по дате создания (новые сначала)
                     .ToListAsync();
 
                 return goals;
@@ -40,7 +40,7 @@ namespace FinanceFlow.Services.Implementations
         {
             try
             {
-                // ЧИСТЫЙ МЕТОД (Убрали костыли с MinValue)
+                // Получаю конкретную цель для формы редактирования или просмотра деталей
                 return await _context.Goals
                     .Include(g => g.GoalCategory)
                     .Include(g => g.Deposits)
@@ -57,13 +57,15 @@ namespace FinanceFlow.Services.Implementations
         {
             try
             {
+                // Сначала проверяю, что все данные корректные
                 var validationResult = ValidateGoal(goal);
                 if (!validationResult.success) return validationResult;
 
+                // Убеждаюсь, что выбранная категория реально существует в базе
                 var categoryExists = await _context.GoalCategories.AnyAsync(c => c.CategoryId == goal.CategoryId);
                 if (!categoryExists) return (false, "Категория не существует");
 
-                // Упрощенная нормализация (оставляем только Unspecified для надежности)
+                // PostgreSQL капризничает с DateTime, поэтому явно указываю Unspecified
                 goal.StartDate = DateTime.SpecifyKind(goal.StartDate, DateTimeKind.Unspecified);
                 goal.EndDate = DateTime.SpecifyKind(goal.EndDate, DateTimeKind.Unspecified);
                 goal.CreatedAt = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Unspecified);
@@ -85,17 +87,20 @@ namespace FinanceFlow.Services.Implementations
         {
             try
             {
+                // Нахожу существующую цель - обновляю только её, а не создаю новую
                 var existingGoal = await _context.Goals.FirstOrDefaultAsync(g => g.GoalId == goal.GoalId);
                 if (existingGoal == null) return (false, "Цель не найдена");
 
+                // Проверяю новые данные перед сохранением
                 var validationResult = ValidateGoal(goal);
                 if (!validationResult.success) return validationResult;
 
+                // Обновляю только нужные поля, оставляя системные данные без изменений
                 existingGoal.Title = goal.Title;
                 existingGoal.TargetAmount = goal.TargetAmount;
                 existingGoal.CurrentAmount = goal.CurrentAmount; // Обновляем и текущую сумму если надо
 
-                // Нормализация
+                // Нормализация дат
                 existingGoal.StartDate = DateTime.SpecifyKind(goal.StartDate, DateTimeKind.Unspecified);
                 existingGoal.EndDate = DateTime.SpecifyKind(goal.EndDate, DateTimeKind.Unspecified);
 
@@ -121,6 +126,8 @@ namespace FinanceFlow.Services.Implementations
                 var goal = await _context.Goals.FirstOrDefaultAsync(g => g.GoalId == goalId);
                 if (goal == null) return (false, "Цель не найдена");
 
+                // В базе настроено каскадное удаление, так что все 
+                // пополнения удалятся автоматически
                 _context.Goals.Remove(goal);
                 await _context.SaveChangesAsync();
                 return (true, "Цель удалена");
@@ -134,11 +141,13 @@ namespace FinanceFlow.Services.Implementations
 
         public async Task<List<GoalCategory>> GetCategoriesAsync()
         {
+            // Категории возвращаю отсортированными по порядку
             return await _context.GoalCategories.OrderBy(c => c.SortOrder).ToListAsync();
         }
 
         public async Task<List<Goal>> GetGoalsByCategoryAsync(int categoryId)
         {
+            // Использую для фильтрации целей по категориям в аналитике
             return await _context.Goals
                 .Include(g => g.GoalCategory)
                 .Where(g => g.CategoryId == categoryId)
@@ -149,7 +158,6 @@ namespace FinanceFlow.Services.Implementations
         {
             if (string.IsNullOrWhiteSpace(goal.Title)) return (false, "Название не может быть пустым");
             if (goal.TargetAmount <= 0) return (false, "Целевая сумма должна быть > 0");
-            // Проверку дат убрали из БД, но здесь можно оставить логическую
             if (goal.EndDate <= goal.StartDate) return (false, "Дата окончания должна быть позже даты начала");
             return (true, string.Empty);
         }

@@ -5,29 +5,36 @@ namespace FinanceFlow.ViewModels
 {
     public class GoalViewModel : ViewModelBase
     {
+        // Базовая модель цели из базы данных
         private readonly Goal _goal;
+
+        // Локальные копии часто изменяемых свойств для оптимизации
         private decimal _currentAmount;
         private bool _isCompleted;
         private Bitmap? _goalImage; // Храним загруженную картинку
 
-        // --- ФЛАГИ ЗАЩИТЫ ОТ РЕКУРСИИ (Layout Cycle Fix) ---
+        // ФЛАГИ ЗАЩИТЫ ОТ РЕКУРСИИ (Layout Cycle Fix)
+        // Предотвращают циклические обновления свойств в Avalonia
         private bool _isSettingStartDate;
         private bool _isSettingEndDate;
 
-        // Конструктор
+        // Основной конструктор - инициализирует ViewModel на основе модели Goal
         public GoalViewModel(Goal goal)
         {
             _goal = goal ?? throw new ArgumentNullException(nameof(goal));
             _currentAmount = goal.CurrentAmount;
             _isCompleted = goal.IsCompleted;
 
-            // При создании сразу пробуем загрузить картинку
+            // При создании сразу пробую загрузить картинку
             LoadImage();
         }
 
-        // --- Основные свойства ---
+        // ОСНОВНЫЕ СВОЙСТВА ЦЕЛИ
+
+        // Идентификатор цели из базы данных
         public int GoalId => _goal.GoalId;
 
+        // Название цели с уведомлением об изменени
         public string Title
         {
             get => _goal.Title;
@@ -37,20 +44,25 @@ namespace FinanceFlow.ViewModels
                 {
                     _goal.Title = value;
                     OnPropertyChanged();
+
+                    // Обновляем отображаемое название
                     OnPropertyChanged(nameof(DisplayTitle));
                 }
             }
         }
 
+        // Отображаемое название с иконкой категории
         public string DisplayTitle => $"{CategoryIcon} {Title}";
 
-        // --- Категория ---
+        // СВОЙСТВА КАТЕГОРИИ
         public int CategoryId => _goal.CategoryId;
         public string CategoryName => _goal.GoalCategory?.Name ?? "БЕЗ КАТЕГОРИИ";
         public string CategoryIcon => _goal.GoalCategory?.Icon ?? "⭐";
         public string CategoryColor => _goal.GoalCategory?.Color ?? "#6B7280";
 
-        // --- Финансы ---
+        // ФИНАНСОВЫЕ СВОЙСТВА
+
+        // Текущая накопленная сумма с логикой обновления
         public decimal CurrentAmount
         {
             get => _currentAmount;
@@ -58,16 +70,20 @@ namespace FinanceFlow.ViewModels
             {
                 if (SetProperty(ref _currentAmount, value))
                 {
+                    // Синхронизируем с моделью
                     _goal.CurrentAmount = value;
+
+                    // Обновляю все зависимые свойства прогресса
                     OnPropertyChanged(nameof(RemainingAmount));
                     OnPropertyChanged(nameof(ProgressPercentage));
                     OnPropertyChanged(nameof(ProgressWidth));
                     OnPropertyChanged(nameof(ProgressColor));
-                    UpdateCompletionStatus();
+                    UpdateCompletionStatus(); // Проверяем не выполнена ли цель
                 }
             }
         }
 
+        // Целевая сумма для накопления
         public decimal TargetAmount
         {
             get => _goal.TargetAmount;
@@ -77,6 +93,8 @@ namespace FinanceFlow.ViewModels
                 {
                     _goal.TargetAmount = value;
                     OnPropertyChanged();
+
+                    // Обновляю свойства зависящие от целевой суммы
                     OnPropertyChanged(nameof(RemainingAmount));
                     OnPropertyChanged(nameof(ProgressPercentage));
                     OnPropertyChanged(nameof(ProgressWidth));
@@ -85,14 +103,18 @@ namespace FinanceFlow.ViewModels
             }
         }
 
+        // Оставшаяся сумма до цели
         public decimal RemainingAmount => TargetAmount - CurrentAmount;
 
+        // Процент выполнения цели от 0 до 100
         public decimal ProgressPercentage =>
             TargetAmount > 0 ? Math.Round((CurrentAmount / TargetAmount) * 100, 1) : 0;
 
+        // Ширина прогресс-бара в пикселях (для визуализации)
         public double ProgressWidth =>
             Math.Min((double)ProgressPercentage, 100) * 3.0;
 
+        // Цвет прогресс-бара в зависимости от процента выполнения
         public string ProgressColor
         {
             get
@@ -108,13 +130,15 @@ namespace FinanceFlow.ViewModels
             }
         }
 
-        // --- Даты (С ФИКСОМ РЕКУРСИИ) ---
+        // СВОЙСТВА ДАТ С ЗАЩИТОЙ ОТ РЕКУРСИИ
+
+        // Дата начала цели с защитой от циклических обновлений
         public DateTime StartDate
         {
             get => _goal.StartDate;
             set
             {
-                // Если мы уже меняем дату или значение не изменилось - выходим
+                // Защита от рекурсии и лишних обновлений
                 if (_isSettingStartDate || _goal.StartDate == value) return;
 
                 try
@@ -122,10 +146,9 @@ namespace FinanceFlow.ViewModels
                     _isSettingStartDate = true; // Блокируем повторный вход
                     _goal.StartDate = value;
 
-                    // Уведомляем об изменении самой даты
-                    OnPropertyChanged();
+                    OnPropertyChanged(); // Уведомляем об изменении даты
 
-                    // Уведомляем зависимые свойства ПАЧКОЙ
+                    // Массовое обновление всех зависимых свойств дат
                     OnMultiplePropertiesChanged(
                         nameof(DaysPassed),
                         nameof(TotalDays),
@@ -142,23 +165,23 @@ namespace FinanceFlow.ViewModels
             }
         }
 
+        // Дата окончания цели с аналогичной защитой
         public DateTime EndDate
         {
             get => _goal.EndDate;
             set
             {
-                // Если мы уже меняем дату или значение не изменилось - выходим
                 if (_isSettingEndDate || _goal.EndDate == value) return;
 
                 try
                 {
-                    _isSettingEndDate = true; // Блокируем повторный вход
+                    _isSettingEndDate = true; // Блокирую повторный вход
                     _goal.EndDate = value;
 
                     // Уведомляем об изменении самой даты
                     OnPropertyChanged();
 
-                    // Уведомляем зависимые свойства ПАЧКОЙ
+                    // Обновляем свойства связанные с дедлайном
                     OnMultiplePropertiesChanged(
                         nameof(DaysLeft),
                         nameof(DaysLeftText),
@@ -170,16 +193,18 @@ namespace FinanceFlow.ViewModels
                 }
                 finally
                 {
-                    _isSettingEndDate = false; // Снимаем блокировку
+                    _isSettingEndDate = false; // Снимаю блокировку
                 }
             }
         }
 
+        // Вычисляемые свойства для работы с датами
         public int DaysPassed => (DateTime.Today - StartDate).Days;
         public int TotalDays => (EndDate - StartDate).Days;
         public int DaysLeft => (EndDate - DateTime.Today).Days;
         public bool IsOverdue => DaysLeft < 0 && !IsCompleted;
 
+        // Текстовое представление оставшегося времени
         public string DaysLeftText
         {
             get
@@ -196,6 +221,7 @@ namespace FinanceFlow.ViewModels
             }
         }
 
+        // Цвет индикатора времени в зависимости от срочности
         public string DaysLeftColor
         {
             get
@@ -211,10 +237,11 @@ namespace FinanceFlow.ViewModels
             }
         }
 
+        // Процент пройденного времени от начала до конца цели
         public double TimeProgressPercentage =>
             TotalDays > 0 ? Math.Round((DaysPassed / (double)TotalDays) * 100, 1) : 0;
 
-        // --- Приоритет ---
+        // СВОЙСТВА ПРИОРИТЕТА
         public int Priority
         {
             get => _goal.Priority;
@@ -224,6 +251,8 @@ namespace FinanceFlow.ViewModels
                 {
                     _goal.Priority = value;
                     OnPropertyChanged();
+
+                    // Обновляю визуальные свойства приоритета
                     OnPropertyChanged(nameof(PriorityColor));
                     OnPropertyChanged(nameof(PriorityName));
                     OnPropertyChanged(nameof(PriorityIcon));
@@ -231,6 +260,7 @@ namespace FinanceFlow.ViewModels
             }
         }
 
+        // Цвет приоритета для индикации в UI
         public string PriorityColor => Priority switch
         {
             1 => "#EF4444",
@@ -255,7 +285,7 @@ namespace FinanceFlow.ViewModels
             _ => "⚪"
         };
 
-        // --- Статус ---
+        // СВОЙСТВА СТАТУСА ВЫПОЛНЕНИЯ
         public bool IsCompleted
         {
             get => _isCompleted;
@@ -273,7 +303,7 @@ namespace FinanceFlow.ViewModels
         public string StatusText => IsCompleted ? "Выполнено" : IsOverdue ? "Просрочено" : "В процессе";
         public string StatusColor => IsCompleted ? "#10B981" : IsOverdue ? "#EF4444" : "#F59E0B";
 
-        // --- Описание (с логикой для UI) ---
+        // СВОЙСТВА ОПИСАНИЯ
         public string Description
         {
             get => _goal.Description ?? string.Empty;
@@ -290,7 +320,7 @@ namespace FinanceFlow.ViewModels
 
         public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
 
-        // --- Изображение (с логикой загрузки) ---
+        // РАБОТА С ИЗОБРАЖЕНИЯМИ
         public string ImagePath
         {
             get => _goal.ImagePath ?? string.Empty;
@@ -300,7 +330,7 @@ namespace FinanceFlow.ViewModels
                 {
                     _goal.ImagePath = value;
                     OnPropertyChanged();
-                    LoadImage();
+                    LoadImage(); // Перезагружаю изображение при изменении пути
                 }
             }
         }
@@ -319,6 +349,7 @@ namespace FinanceFlow.ViewModels
 
         public bool HasImage => GoalImage != null;
 
+        // Загрузка изображения цели с обработкой ошибок
         private void LoadImage()
         {
             try
@@ -335,13 +366,16 @@ namespace FinanceFlow.ViewModels
             }
             catch (Exception)
             {
+                // В случае ошибки сбрасываем изображение
                 GoalImage = null;
             }
         }
 
         public DateTime CreatedAt => _goal.CreatedAt;
 
-        // --- Бизнес-методы ---
+        // БИЗНЕС-МЕТОДЫ ДЛЯ РАБОТЫ С ЦЕЛЬЮ
+
+        // Добавление суммы к текущим накоплениям
         public void AddDeposit(decimal amount)
         {
             if (amount <= 0) return;
@@ -353,6 +387,7 @@ namespace FinanceFlow.ViewModels
             }
         }
 
+        // Изъятие суммы из накоплений
         public void WithdrawDeposit(decimal amount)
         {
             if (amount <= 0 || amount > CurrentAmount) return;
@@ -363,27 +398,32 @@ namespace FinanceFlow.ViewModels
             }
         }
 
+        // Прямое обновление прогресса с проверками
         public void UpdateProgress(decimal newAmount)
         {
             CurrentAmount = Math.Max(0, Math.Min(newAmount, TargetAmount));
         }
 
+        // Продление дедлайна на указанное количество дней
         public void ExtendDeadline(int additionalDays)
         {
             EndDate = EndDate.AddDays(additionalDays);
         }
 
+        // Отметка цели как выполненной
         public void MarkAsCompleted()
         {
             IsCompleted = true;
             CurrentAmount = TargetAmount;
         }
 
+        // Снятие отметки о выполнении
         public void MarkAsIncomplete()
         {
             IsCompleted = false;
         }
 
+        // Валидация данных цели перед сохранением
         public (bool isValid, string errorMessage) Validate()
         {
             if (string.IsNullOrWhiteSpace(Title)) return (false, "Название цели не может быть пустым");
@@ -392,8 +432,10 @@ namespace FinanceFlow.ViewModels
             return (true, string.Empty);
         }
 
+        // Получение базовой модели для сохранения в БД
         public Goal GetGoalModel() => _goal;
 
+        // Автоматическое обновление статуса выполнения при изменении сумм
         private void UpdateCompletionStatus()
         {
             if (CurrentAmount >= TargetAmount)

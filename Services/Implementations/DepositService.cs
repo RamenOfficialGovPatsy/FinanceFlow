@@ -3,10 +3,6 @@ using FinanceFlow.Models;
 using FinanceFlow.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace FinanceFlow.Services.Implementations
 {
@@ -21,6 +17,7 @@ namespace FinanceFlow.Services.Implementations
             _logger = logger;
         }
 
+        // Получение всех пополнений с информацией о целях
         public async Task<List<GoalDeposit>> GetAllDepositsAsync()
         {
             return await _context.GoalDeposits
@@ -29,6 +26,7 @@ namespace FinanceFlow.Services.Implementations
                 .ToListAsync();
         }
 
+        // Получение пополнений для конкретной цели
         public async Task<List<GoalDeposit>> GetDepositsByGoalAsync(int goalId)
         {
             return await _context.GoalDeposits
@@ -38,6 +36,7 @@ namespace FinanceFlow.Services.Implementations
                 .ToListAsync();
         }
 
+        // Добавление нового пополнения с транзакцией
         public async Task<(bool success, string message)> AddDepositAsync(GoalDeposit deposit)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -53,7 +52,7 @@ namespace FinanceFlow.Services.Implementations
 
                 _context.GoalDeposits.Add(deposit);
 
-                // Обновляем цель
+                // Обновляем текущую сумму цели и проверяем завершение
                 goal.CurrentAmount += deposit.Amount;
                 CheckCompletion(goal);
 
@@ -70,6 +69,7 @@ namespace FinanceFlow.Services.Implementations
             }
         }
 
+        // Обновление существующего пополнения
         public async Task<(bool success, string message)> UpdateDepositAsync(GoalDeposit deposit)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -84,19 +84,13 @@ namespace FinanceFlow.Services.Implementations
                 if (existingDeposit == null) return (false, "Пополнение не найдено");
                 var goal = existingDeposit.Goal;
 
-                // 1. Откатываем старую сумму
+                // Откатываем старую сумму и применяем новую
                 goal.CurrentAmount -= existingDeposit.Amount;
-
-                // 2. Применяем новые данные
                 existingDeposit.Amount = deposit.Amount;
                 existingDeposit.DepositType = deposit.DepositType;
-                existingDeposit.Comment = deposit.Comment; // <-- ВОТ ЭТО ОБНОВЛЯЕТ КОММЕНТАРИЙ
-
-                // (Дату обычно не меняем при редактировании суммы, но если нужно - раскомментируй)
-                // existingDeposit.DepositDate = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Unspecified);
-
-                // 3. Применяем новую сумму
+                existingDeposit.Comment = deposit.Comment;
                 goal.CurrentAmount += existingDeposit.Amount;
+
                 CheckCompletion(goal);
 
                 await _context.SaveChangesAsync();
@@ -112,6 +106,7 @@ namespace FinanceFlow.Services.Implementations
             }
         }
 
+        // Удаление пополнения с коррекцией суммы цели
         public async Task<(bool success, string message)> DeleteDepositAsync(int depositId)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -142,6 +137,7 @@ namespace FinanceFlow.Services.Implementations
             }
         }
 
+        // Получение общей суммы пополнений для цели
         public async Task<decimal> GetTotalDepositsByGoalAsync(int goalId)
         {
             return await _context.GoalDeposits
@@ -149,6 +145,7 @@ namespace FinanceFlow.Services.Implementations
                 .SumAsync(d => d.Amount);
         }
 
+        // Проверка и обновление статуса завершения цели
         private void CheckCompletion(Goal goal)
         {
             if (goal.CurrentAmount < 0) goal.CurrentAmount = 0;

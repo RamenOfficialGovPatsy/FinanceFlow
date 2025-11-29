@@ -1,17 +1,18 @@
 using FinanceFlow.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
 
 namespace FinanceFlow.Data
 {
     public class AppDbContext : DbContext
     {
-        // 1. Включаем переключатель глобально при первом обращении к контексту
+        // Статический конструктор для глобальной настройки поведения Npgsql
         static AppDbContext()
         {
+            // Включил совместимость с legacy timestamp поведением для DateTime
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
         }
 
+        // Коллекции сущностей для работы с таблицами
         public DbSet<GoalCategory> GoalCategories { get; set; }
         public DbSet<Goal> Goals { get; set; }
         public DbSet<GoalDeposit> GoalDeposits { get; set; }
@@ -21,18 +22,15 @@ namespace FinanceFlow.Data
         {
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-            // 2. Просто подключаемся, без ошибочных опций
+            // Подключение к PostgreSQL с предустановленными учетными данными
             optionsBuilder.UseNpgsql("Host=localhost;Database=financeflow_db;Username=financeflow_user;Password=Ff_Postgres_Mdk_2025!");
-
-            // Опционально: для отладки, если нужно видеть SQL запросы
-            //  optionsBuilder.EnableDetailedErrors();
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // 3. Явно задаем тип столбца для всех дат (чтобы база хранила их "как есть")
+            // Глобальная настройка: все DateTime свойства хранятся без timezone
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 foreach (var property in entityType.GetProperties())
@@ -44,43 +42,51 @@ namespace FinanceFlow.Data
                 }
             }
 
-            // --- GoalCategory ---
+            // Конфигурация таблицы GoalCategories
             modelBuilder.Entity<GoalCategory>(entity =>
             {
                 entity.HasKey(e => e.CategoryId);
                 entity.Property(e => e.CategoryId).ValueGeneratedOnAdd();
                 entity.ToTable("GoalCategories");
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-                entity.Property(e => e.Color).HasMaxLength(7);
-                entity.Property(e => e.Icon).HasMaxLength(20);
-                entity.Property(e => e.Name).HasMaxLength(50);
+                entity.Property(e => e.Color).HasMaxLength(7); // HEX формат #RRGGBB
+                entity.Property(e => e.Icon).HasMaxLength(20); // Эмодзи
+                entity.Property(e => e.Name).HasMaxLength(50); // Название категории
             });
 
-            // --- Goal ---
+            // Конфигурация таблицы Goals
             modelBuilder.Entity<Goal>(entity =>
             {
                 entity.HasKey(e => e.GoalId);
                 entity.Property(e => e.GoalId).ValueGeneratedOnAdd();
                 entity.ToTable("Goals");
+
+                // Настройка денежных полей с точностью 2 знака после запятой
                 entity.Property(g => g.TargetAmount).HasColumnType("decimal(15,2)");
                 entity.Property(g => g.CurrentAmount).HasColumnType("decimal(15,2)").HasDefaultValue(0);
+
+                // Значения по умолчанию для дат
                 entity.Property(g => g.StartDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.Property(g => g.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                // Ограничения длины строк
                 entity.Property(g => g.Title).HasMaxLength(100);
                 entity.Property(g => g.ImagePath).HasMaxLength(255);
                 entity.Property(g => g.Description).HasMaxLength(500);
 
+                // Связь с категорией (один-ко-многим)
                 entity.HasOne(g => g.GoalCategory)
                       .WithMany(gc => gc.Goals)
                       .HasForeignKey(g => g.CategoryId);
 
+                // Проверочные ограничения для целостности данных
                 entity.ToTable(t => t.HasCheckConstraint("CK_Goals_TargetAmount", "\"TargetAmount\" > 0"));
                 entity.ToTable(t => t.HasCheckConstraint("CK_Goals_CurrentAmount", "\"CurrentAmount\" >= 0"));
                 entity.ToTable(t => t.HasCheckConstraint("CK_Goals_Amounts", "\"CurrentAmount\" <= \"TargetAmount\""));
                 entity.ToTable(t => t.HasCheckConstraint("CK_Goals_Priority", "\"Priority\" IN (1, 2, 3)"));
             });
 
-            // --- GoalDeposit ---
+            // Конфигурация таблицы GoalDeposits
             modelBuilder.Entity<GoalDeposit>(entity =>
             {
                 entity.HasKey(e => e.DepositId);
@@ -91,16 +97,18 @@ namespace FinanceFlow.Data
                 entity.Property(gd => gd.DepositType).HasMaxLength(20).HasDefaultValue("regular");
                 entity.Property(gd => gd.Comment).HasMaxLength(200);
 
+                // Связь с целью + каскадное удаление
                 entity.HasOne(gd => gd.Goal)
                       .WithMany(g => g.Deposits)
                       .HasForeignKey(gd => gd.GoalId)
                       .OnDelete(DeleteBehavior.Cascade);
 
+                // Проверочные ограничения
                 entity.ToTable(t => t.HasCheckConstraint("CK_GoalDeposits_Amount", "\"Amount\" > 0"));
                 entity.ToTable(t => t.HasCheckConstraint("CK_GoalDeposits_Type", "\"DepositType\" IN ('regular', 'salary', 'freelance', 'bonus', 'other')"));
             });
 
-            // --- AnalyticsReport ---
+            // Конфигурация таблицы AnalyticsReports 
             modelBuilder.Entity<AnalyticsReport>(entity =>
             {
                 entity.HasKey(e => e.ReportId);
@@ -112,6 +120,7 @@ namespace FinanceFlow.Data
                 entity.Property(e => e.TotalCurrentAmount).HasColumnType("decimal(15,2)").HasDefaultValue(0);
                 entity.Property(e => e.AverageProgress).HasColumnType("decimal(5,2)").HasDefaultValue(0);
 
+                // Проверочные ограничения для отчетов
                 entity.ToTable(t => t.HasCheckConstraint("CK_Reports_Type", "\"ReportType\" IN ('monthly', 'quarterly', 'yearly', 'custom')"));
                 entity.ToTable(t => t.HasCheckConstraint("CK_Reports_Goals", "\"TotalGoals\" >= \"CompletedGoals\""));
                 entity.ToTable(t => t.HasCheckConstraint("CK_Reports_Progress", "\"AverageProgress\" >= 0 AND \"AverageProgress\" <= 100"));

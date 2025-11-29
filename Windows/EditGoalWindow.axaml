@@ -13,7 +13,6 @@
         CanResize="False" SizeToContent="Manual" WindowState="Normal"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
     
-    <!-- Мы используем тот же самый UserControl -->
     <views:AddEditGoalView />
     
 </Window>

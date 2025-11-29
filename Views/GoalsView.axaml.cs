@@ -21,7 +21,8 @@ namespace FinanceFlow.Views
             AvaloniaXamlLoader.Load(this);
         }
 
-        // Вспомогательный метод для получения сервисов из DI
+        // Вспомогательный метод для получения сервисов из DI-контейнера
+        // Позволяет избежать жестких зависимостей и использовать внедрение зависимостей
         private T GetService<T>() where T : notnull
         {
             var app = (App)Application.Current!;
@@ -30,17 +31,16 @@ namespace FinanceFlow.Views
 
         private async void AnalyticsButton_Click(object? sender, RoutedEventArgs e)
         {
+            // Создаем новое окно аналитики
             var analyticsWindow = new AnalyticsWindow();
 
-            // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
-            // Получаем ViewModel из контейнера.
-            // Контейнер сам создаст AnalyticsService и передаст его внутрь ViewModel.
+            // Получаем ViewModel аналитики из DI-контейнера
             var vm = GetService<AnalyticsViewModel>();
 
-            // Устанавливаем DataContext ("подключаем данные к окну")
+            // Связываем ViewModel с окном - теперь данные будут отображаться
             analyticsWindow.DataContext = vm;
-            // -----------------------
 
+            // Показываем окно как модальное поверх родительского окна
             if (VisualRoot is Window parentWindow)
             {
                 await analyticsWindow.ShowDialog(parentWindow);
@@ -51,32 +51,40 @@ namespace FinanceFlow.Views
         {
             var addGoalWindow = new AddGoalWindow();
 
-            // Здесь тоже можно было бы использовать GetService<AddEditGoalViewModel>(),
-            // но пока оставим как было, чтобы не менять слишком много сразу.
-            // Главное, что мы получаем IGoalService через DI.
+            // Получаем сервис работы с целями из DI-контейнера
             var goalService = GetService<IGoalService>();
+
+            // Создаем ViewModel для окна добавления цели
             addGoalWindow.DataContext = new AddEditGoalViewModel(goalService);
 
+            // Показываем окно как модальное
             if (VisualRoot is Window parentWindow)
             {
                 await addGoalWindow.ShowDialog(parentWindow);
+
+                // После закрытия окна обновляем список целей
                 if (DataContext is MainWindowViewModel vm) await vm.LoadGoalsAsync();
             }
         }
 
         private async void EditGoalMenuItem_Click(object? sender, RoutedEventArgs e)
         {
+            // Проверяем что событие вызвано из MenuItem и есть выбранная цель
             if (sender is MenuItem menuItem && menuItem.Tag is GoalViewModel selectedGoal)
             {
                 var editGoalWindow = new EditGoalWindow();
+
+                // Получаем сервис работы с целями
                 var goalService = GetService<IGoalService>();
 
-                // Передаем модель для редактирования
+                // Создаем ViewModel для редактирования - передаем существующую цель
                 editGoalWindow.DataContext = new AddEditGoalViewModel(goalService, selectedGoal.GetGoalModel());
 
                 if (VisualRoot is Window parentWindow)
                 {
                     await editGoalWindow.ShowDialog(parentWindow);
+
+                    // После закрытия обновляем список целей
                     if (DataContext is MainWindowViewModel vm) await vm.LoadGoalsAsync();
                 }
             }
@@ -84,15 +92,19 @@ namespace FinanceFlow.Views
 
         private async void AddDepositMenuItem_Click(object? sender, RoutedEventArgs e)
         {
+            // Проверяем что есть выбранная цель для пополнения
             if (sender is MenuItem menuItem && menuItem.Tag is GoalViewModel selectedGoal)
             {
                 var depositWindow = new DepositWindow();
+
+                // Получаем необходимые сервисы из DI-контейнера
                 var depositService = GetService<IDepositService>();
                 var goalService = GetService<IGoalService>();
 
-                // Для депозитов пока создаем вручную, так как нужно передать конкретную цель
+                // Создаем ViewModel для работы с пополнениями
                 var vm = new DepositViewModel(selectedGoal.GetGoalModel(), depositService, goalService);
 
+                // Подписываемся на событие обновления прогресса
                 vm.OnProgressUpdated += async () =>
                 {
                     if (DataContext is MainWindowViewModel mainVm)
@@ -101,6 +113,7 @@ namespace FinanceFlow.Views
                     }
                 };
 
+                // Связываем ViewModel с окном
                 depositWindow.DataContext = vm;
 
                 if (VisualRoot is Window parentWindow)

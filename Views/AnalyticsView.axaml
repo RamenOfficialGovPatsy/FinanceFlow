@@ -25,11 +25,9 @@
                        VerticalAlignment="Center"/>
         </StackPanel>
 
-        <!-- ФИКС: Добавлены AllowAutoHide="False", MaxWidth и HorizontalAlignment -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" AllowAutoHide="False" Padding="0,0,15,0">
             <StackPanel Spacing="24" MaxWidth="700" HorizontalAlignment="Center">
 
-                <!-- ФИКС: Убраны Width и HorizontalAlignment -->
                 <Border Background="{StaticResource AppCardBackground}" 
                         CornerRadius="12" 
                         Padding="40">
@@ -95,7 +93,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ФИКС: Убраны Width и HorizontalAlignment -->
                 <Border Background="{StaticResource AppCardBackground}" 
                         CornerRadius="12" 
                         Padding="40">
@@ -151,7 +148,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ФИКС: Убраны Width и HorizontalAlignment -->
                 <Border Background="{StaticResource AppCardBackground}" 
                         CornerRadius="12" 
                         Padding="40">
