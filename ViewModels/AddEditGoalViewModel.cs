@@ -170,7 +170,10 @@ namespace FinanceFlow.ViewModels
                     OnPropertyChanged(nameof(HasImage));
                 }
             }
-            catch (Exception ex) { Console.WriteLine($"Ошибка картинки: {ex.Message}"); }
+            catch (Exception ex)
+            {
+                ShowError($"Не удалось загрузить изображение: {ex.Message}", "Ошибка изображения");
+            }
         }
 
         // Основной метод сохранения цели

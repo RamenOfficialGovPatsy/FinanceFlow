@@ -220,7 +220,7 @@ namespace FinanceFlow.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Ошибка генерации отчета: {ex.Message}");
+                ShowError($"Не удалось создать отчет: {ex.Message}", "Ошибка экспорта");
             }
         }
 

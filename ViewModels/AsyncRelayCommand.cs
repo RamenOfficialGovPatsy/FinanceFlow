@@ -30,9 +30,9 @@ namespace FinanceFlow.ViewModels
             {
                 await _execute();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine($"Ошибка выполнения команды: {ex.Message}");
+                //  Console.WriteLine($"Ошибка выполнения команды: {ex.Message}");
             }
         }
 
@@ -93,9 +93,9 @@ namespace FinanceFlow.ViewModels
                     await _execute(default);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine($"Ошибка выполнения команды<{typeof(T).Name}>: {ex.Message}");
+                //  Console.WriteLine($"Ошибка выполнения команды<{typeof(T).Name}>: {ex.Message}");
             }
         }
 

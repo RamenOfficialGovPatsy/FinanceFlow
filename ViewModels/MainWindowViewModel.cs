@@ -73,7 +73,7 @@ namespace FinanceFlow.ViewModels
             else
             {
                 // Лог ошибки
-                Console.WriteLine($"Ошибка удаления: {result.message}");
+                ShowError($"Не удалось удалить цель: {result.message}");
             }
         }
     }

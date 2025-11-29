@@ -295,11 +295,11 @@ namespace FinanceFlow.ViewModels
                 await ReloadGoalFromDb();
                 DepositHistory.Remove(itemVm);
                 OnProgressUpdated?.Invoke();
-                Console.WriteLine("Пополнение удалено");
+                //  Console.WriteLine("Пополнение удалено");
             }
             else
             {
-                Console.WriteLine($"Ошибка удаления: {result.message}");
+                ShowError($"Не удалось удалить пополнение: {result.message}", "Ошибка удаления");
             }
         }
 

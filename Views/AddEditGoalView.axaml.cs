@@ -60,15 +60,15 @@ namespace FinanceFlow.Views
                 // Получаем локальный путь к выбранному файлу
                 var filePath = files[0].Path.LocalPath;
 
-                try
+                if (DataContext is AddEditGoalViewModel vm)
                 {
-                    // Создаем объект FileInfo для проверки свойств файла
-                    var fileInfo = new FileInfo(filePath);
-
-                    // Получаем доступ к ViewModel для передачи данных
-                    if (DataContext is AddEditGoalViewModel vm)
+                    try
                     {
-                        // 1. ПРОВЕРКА ФОРМАТА ФАЙЛА
+                        // Создаем объект FileInfo для проверки свойств файла
+                        var fileInfo = new FileInfo(filePath);
+
+                        // Получаем доступ к ViewModel для передачи данных
+
                         // Получаем расширение файла в нижнем регистре
                         var extension = fileInfo.Extension.ToLowerInvariant();
 
@@ -80,7 +80,6 @@ namespace FinanceFlow.Views
                             return;
                         }
 
-                        // 2. ПРОВЕРКА РАЗМЕРА ФАЙЛА
                         // Сравниваем размер файла с максимально допустимым
                         if (fileInfo.Length > MaxFileSize)
                         {
@@ -91,12 +90,13 @@ namespace FinanceFlow.Views
 
                         // Если все ок - устанавливаем картинку
                         vm.SetImage(filePath);
-                        Console.WriteLine($"[Успех] Изображение загружено: {fileInfo.Name}");
+                        //  Console.WriteLine($"[Успех] Изображение загружено: {fileInfo.Name}");
+
                     }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Ошибка проверки файла: {ex.Message}");
+                    catch (Exception ex)
+                    {
+                        vm.TriggerError($"Не удалось открыть файл: {ex.Message}", "Ошибка чтения");
+                    }
                 }
             }
         }

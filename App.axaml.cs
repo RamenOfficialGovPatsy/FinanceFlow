@@ -51,7 +51,7 @@ public partial class App : Application
         services.AddDbContext<AppDbContext>();
 
         // Логирование
-        services.AddLogging(builder => builder.AddConsole());
+        services.AddLogging(builder => builder.ClearProviders());
 
         services.AddTransient<IGoalService, GoalService>();
         services.AddTransient<IDepositService, DepositService>();
