@@ -6,11 +6,10 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         
-        <!-- Манифест для Windows (поддержка 4K) -->
+        
         <ApplicationManifest>app.manifest</ApplicationManifest>
         
-        <!-- Иконка приложения (будет добавлена в Assets/Images) -->
-        <!--<ApplicationIcon>Assets/Images/app_icon.ico</ApplicationIcon>-->
+       
     </PropertyGroup>
 
     <ItemGroup>
@@ -36,19 +35,9 @@
         <!-- Зависимость для PDF-отчетов -->
         <PackageReference Include="QuestPDF" Version="2025.7.4" />
 
-        <!-- 
-          Для разработки: Позволяет Avalonia показывать превью в IDE
-          Если используете Rider, этот пакет не нужен. 
-          Если Visual Studio, раскомментируйте ее.
-        -->
-        <!-- <PackageReference Include="Avalonia.Diagnostics" Version="11.0.10" /> -->
     </ItemGroup>
 
     <ItemGroup>
-        <!-- 
-          КРИТИЧЕСКИ ВАЖНО: 
-          Встраиваем шрифты Manrope и другие ресурсы в приложение.
-        -->
         <AvaloniaResource Include="Assets/Fonts/*" />
         <AvaloniaResource Include="Assets/Images/*" />
     </ItemGroup>
